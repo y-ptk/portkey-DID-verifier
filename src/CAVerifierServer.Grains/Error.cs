@@ -13,6 +13,7 @@ public static class Error
     public const int IdNotExist = 20009;
     public const string VerifyCodeErrorLogPrefix = "Verify code falied.Error:";
     public const string SendVerificationRequestErrorLogPrefix = "SendVerificationRequest falied. Error:";
+    public const string VerifyAppleErrorLogPrefix = "Verify apple identity token falied.Error:";
     public const int InvalidVerifierSessionId = 20010;
     public static readonly Dictionary<int, string> Message = new()
     {
@@ -21,7 +22,7 @@ public static class Error
         { InvalidLoginGuardianIdentifier, "LoginGuardianIdentifier does not match the VerifierSessionId" },
         { InvalidEmail, "Invalid email input" },
         { TooManyRetries, "Too Many Retries" },
-        { WrongCode, "Verification code does not match" },
+        { WrongCode, "Invalid code" },
         { Timeout, "Timeout" },
         { Verified, "Already Verified" },
         { IdNotExist,"There is no such entity" },

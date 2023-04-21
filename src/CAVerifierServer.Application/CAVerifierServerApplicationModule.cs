@@ -1,7 +1,8 @@
-﻿using CAVerifierServer.AccountAction;
+﻿using System.IdentityModel.Tokens.Jwt;
 using CAVerifierServer.Email;
 using CAVerifierServer.Grains;
 using CAVerifierServer.Options;
+using CAVerifierServer.Phone;
 using CAVerifierServer.VerifyCodeSender;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.Account;
@@ -34,11 +35,18 @@ public class CAVerifierServerApplicationModule : AbpModule
         Configure<AbpAutoMapperOptions>(options => { options.AddMaps<CAVerifierServerApplicationModule>(); });
         var configuration = context.Services.GetConfiguration();
         Configure<ChainOptions>(configuration.GetSection("Chains"));
-        Configure<WhiteListExpireTimeOptions>(configuration.GetSection("WhiteListExpireTimeOptions"));
-        Configure<VerifierInfoOptions>(configuration.GetSection("VerifierInfoOption"));
+        Configure<WhiteListExpireTimeOptions>(configuration.GetSection("WhiteListExpireTime"));
+        Configure<VerifierInfoOptions>(configuration.GetSection("VerifierInfo"));
         Configure<AwsEmailOptions>(configuration.GetSection("awsEmail"));
+        Configure<AwssmsMessageOptions>(configuration.GetSection("AWSSMSMessage"));
+        Configure<SMSServiceRatioOptions>(configuration.GetSection("SMSServiceRatio"));
+        Configure<TelesignSMSMessageOptions>(configuration.GetSection("TelesignSMSMessage"));
         context.Services.AddSingleton<IEmailSender, AwsEmailSender>();
+        context.Services.AddSingleton<ISMSServiceSender,AwsSmsMessageSender>();
+        context.Services.AddSingleton<ISMSServiceSender, TelesignSmsMessageSender>();
+        //context.Services.AddSingleton<ISmsSender, ISMSServiceProviderSelector>();
         context.Services.AddSingleton<IVerifyCodeSender, EmailVerifyCodeSender>();
         context.Services.AddSingleton<IVerifyCodeSender, PhoneVerifyCodeSender>();
+        context.Services.AddHttpClient();
     }
 }

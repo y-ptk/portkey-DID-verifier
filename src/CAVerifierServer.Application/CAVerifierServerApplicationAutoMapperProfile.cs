@@ -1,7 +1,7 @@
-﻿using System;
-using AutoMapper;
+﻿using AutoMapper;
 using CAVerifierServer.Account;
 using CAVerifierServer.Application;
+using CAVerifierServer.Grains.Grain;
 
 namespace CAVerifierServer;
 
@@ -9,13 +9,9 @@ public class CAVerifierServerApplicationAutoMapperProfile : Profile
 {
     public CAVerifierServerApplicationAutoMapperProfile()
     {
-        /* You can configure your AutoMapper mapping configuration here.
-         * Alternatively, you can split your mapping configurations
-         * into multiple profile classes for a better organization. */
-        
         CreateMap<CAServer, DidServer>();
-        
-        
-        
+        CreateMap<VerifyGoogleTokenGrainDto, VerifyGoogleTokenDto>();
+        CreateMap<VerifyAppleTokenGrainDto, VerifyAppleTokenDto>();
+        CreateMap<VerifyTokenRequestDto, VerifyTokenGrainDto>();
     }
 }

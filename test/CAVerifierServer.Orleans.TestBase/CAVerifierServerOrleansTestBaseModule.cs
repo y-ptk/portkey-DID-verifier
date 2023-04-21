@@ -1,12 +1,26 @@
 using AElfIndexer.Orleans.TestBase;
-using CAVerifierServer.Grains;
 using CAVerifierServer.Grains.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Orleans;
+using Volo.Abp;
+using Volo.Abp.Authorization;
+using Volo.Abp.Autofac;
+using Volo.Abp.AutoMapper;
+using Volo.Abp.Caching;
 using Volo.Abp.Modularity;
+using Volo.Abp.ObjectMapping;
 
 namespace CAVerifierServer.Orleans.TestBase;
 
+[DependsOn(
+    typeof(AbpAutofacModule),
+    typeof(AbpTestBaseModule),
+    typeof(AbpAuthorizationModule),
+    typeof(CAVerifierServerDomainModule),
+    typeof(AbpCachingModule),
+    typeof(AbpAutoMapperModule),
+    typeof(AbpObjectMappingModule)
+)]
 public class CAVerifierServerOrleansTestBaseModule:AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
@@ -14,8 +28,8 @@ public class CAVerifierServerOrleansTestBaseModule:AbpModule
         context.Services.AddSingleton<IClusterClient>(sp => sp.GetService<ClusterFixture>().Cluster.Client);
         context.Services.Configure<VerifierAccountOptions>(o =>
         {
-            o.PrivateKey = "XXXXXXX";
-            o.Address = "XXXXXX";
+            o.PrivateKey = "XXXXXXXXX";
+            o.Address = "XXXXXXX";
         });
         context.Services.Configure<VerifierCodeOptions>(o =>
         {

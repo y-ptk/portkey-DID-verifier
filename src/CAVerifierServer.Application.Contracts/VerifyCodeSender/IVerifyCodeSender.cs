@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
-using Volo.Abp.Application.Services;
 
-namespace CAVerifierServer.AccountAction;
+namespace CAVerifierServer.VerifyCodeSender;
 
 public interface IVerifyCodeSender
 {

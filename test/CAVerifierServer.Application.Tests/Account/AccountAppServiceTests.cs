@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using AElf;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
 
@@ -12,11 +13,11 @@ namespace CAVerifierServer.Account;
  * Only test your own application services.
  */
 [Collection(CAVerifierServerTestConsts.CollectionDefinitionName)]
-public class AccountAppServiceTests : CAVerifierServerApplicationTestBase
+public partial class AccountAppServiceTests : CAVerifierServerApplicationTestBase
 {
     private const string DefaultEmailAddress = "sam@XXXXX.com";
     private readonly IAccountAppService _accountAppService;
-    private const string Type = "Email";
+    private const string DefaultType = "Email";
     private const string Code = "123456";
     private const string InvalidType = "ErrorType";
     private const string InvalidEmail = "1234567";
@@ -25,6 +26,12 @@ public class AccountAppServiceTests : CAVerifierServerApplicationTestBase
     {
         _accountAppService = GetRequiredService<IAccountAppService>();
     }
+    
+    protected override void AfterAddApplication(IServiceCollection services)
+    {
+        services.AddSingleton(GetMockEmailSender());
+    }
+
 
 
     [Fact]
@@ -34,7 +41,7 @@ public class AccountAppServiceTests : CAVerifierServerApplicationTestBase
         //success
         var result = await _accountAppService.SendVerificationRequestAsync(new SendVerificationRequestInput
         {
-            Type = Type,
+            Type = DefaultType,
             GuardianIdentifier = DefaultEmailAddress,
             VerifierSessionId = verifierSessionId
         });
@@ -51,7 +58,7 @@ public class AccountAppServiceTests : CAVerifierServerApplicationTestBase
         //success
         var result = await _accountAppService.SendVerificationRequestAsync(new SendVerificationRequestInput
         {
-            Type = Type,
+            Type = DefaultType,
             GuardianIdentifier = DefaultEmailAddress,
             VerifierSessionId = verifierSessionId
         });
@@ -62,7 +69,7 @@ public class AccountAppServiceTests : CAVerifierServerApplicationTestBase
 
         var dto = await _accountAppService.SendVerificationRequestAsync(new SendVerificationRequestInput
         {
-            Type = Type,
+            Type = DefaultType,
             GuardianIdentifier = DefaultEmailAddress,
             VerifierSessionId = verifierSessionId
         });
@@ -92,11 +99,27 @@ public class AccountAppServiceTests : CAVerifierServerApplicationTestBase
         {
             GuardianIdentifier = InvalidEmail,
             VerifierSessionId = Guid.NewGuid(),
-            Type = Type
+            Type = DefaultType
         });
         result.Success.ShouldBe(false);
         result.Message.ShouldBe(Error.Message[Error.InvalidGuardianIdentifierInput]);
     }
+    
+    [Fact]
+    public async Task SendVerificationRequest_Register_InvalidPhoneInput_Test()
+    {
+        var result = await _accountAppService.SendVerificationRequestAsync(new SendVerificationRequestInput
+        {
+            GuardianIdentifier = "",
+            VerifierSessionId = Guid.NewGuid(),
+            Type = "Phone"
+        });
+        result.Success.ShouldBe(false);
+        result.Message.ShouldBe(Error.Message[Error.InvalidGuardianIdentifierInput]);
+    }
+    
+    
+    
 
     [Fact]
     public async Task SendVerificationRequest_InputIsNullOrEmpty_Test()
@@ -104,7 +127,7 @@ public class AccountAppServiceTests : CAVerifierServerApplicationTestBase
         var result = await _accountAppService.SendVerificationRequestAsync(new SendVerificationRequestInput
         {
             VerifierSessionId = Guid.NewGuid(),
-            Type = Type
+            Type = DefaultType
         });
         result.Success.ShouldBe(false);
         result.Message.ShouldBe(Error.Message[Error.InvalidGuardianIdentifierInput]);
@@ -112,7 +135,7 @@ public class AccountAppServiceTests : CAVerifierServerApplicationTestBase
         var resultDto = await _accountAppService.SendVerificationRequestAsync(new SendVerificationRequestInput
         {
             GuardianIdentifier = DefaultEmailAddress,
-            Type = Type
+            Type = DefaultType
         });
         resultDto.Success.ShouldBe(true);
         resultDto.Data.VerifierSessionId.ShouldBe(Guid.Empty);
@@ -151,7 +174,7 @@ public class AccountAppServiceTests : CAVerifierServerApplicationTestBase
         var salt = Guid.NewGuid().ToString().Replace("-", "");
         var hash = HashHelper.ComputeFrom(salt + HashHelper.ComputeFrom(DefaultEmailAddress).ToHex()).ToHex();
         var id = await SendVerificationRequest();
-        var unMatchEmail = "eric@XXXX.com";
+        var unMatchEmail = "eric@XXXXX.com";
         var result = await _accountAppService.VerifyCodeAsync(new VerifyCodeInput
         {
             GuardianIdentifier = unMatchEmail,
@@ -269,12 +292,20 @@ public class AccountAppServiceTests : CAVerifierServerApplicationTestBase
     private async Task<Guid> SendVerificationRequest()
     {
         var verifierSessionId = Guid.NewGuid();
-        var result = await _accountAppService.SendVerificationRequestAsync(new SendVerificationRequestInput
+        await _accountAppService.SendVerificationRequestAsync(new SendVerificationRequestInput
         {
-            Type = Type,
+            Type = DefaultType,
             VerifierSessionId = verifierSessionId,
             GuardianIdentifier = DefaultEmailAddress,
         });
         return verifierSessionId;
     }
+
+    /*[Fact]
+    public async Task WhiteList_Test()
+    {
+        var ipList = new List<string>();
+        ipList.Add("127.0.0.1");
+        await _accountAppService.WhiteListCheckAsync(ipList);
+    }*/
 }

@@ -47,6 +47,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAVerifierServer.Grains", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAVerifierServer.Orleans.TestBase", "test\CAVerifierServer.Orleans.TestBase\CAVerifierServer.Orleans.TestBase.csproj", "{331736F0-C785-49A2-ADD9-9EAFAE6584D9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CAVerifierServer.Grain.Tests", "test\CAVerifierServer.Grain.Tests\CAVerifierServer.Grain.Tests.csproj", "{D3DFF6F9-C8FC-4079-9AF1-7C598F9362C7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -133,6 +135,10 @@ Global
 		{331736F0-C785-49A2-ADD9-9EAFAE6584D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{331736F0-C785-49A2-ADD9-9EAFAE6584D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{331736F0-C785-49A2-ADD9-9EAFAE6584D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3DFF6F9-C8FC-4079-9AF1-7C598F9362C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3DFF6F9-C8FC-4079-9AF1-7C598F9362C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3DFF6F9-C8FC-4079-9AF1-7C598F9362C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3DFF6F9-C8FC-4079-9AF1-7C598F9362C7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -158,6 +164,7 @@ Global
 		{E0BBBE93-A156-45E3-A44A-F84018B68F45} = {CA9AC87F-097E-4F15-8393-4BC07735A5B0}
 		{A35332B5-0649-4C2B-8D9F-D3A5A89C62C6} = {CA9AC87F-097E-4F15-8393-4BC07735A5B0}
 		{331736F0-C785-49A2-ADD9-9EAFAE6584D9} = {04DBDB01-70F4-4E06-B468-8F87850B22BE}
+		{D3DFF6F9-C8FC-4079-9AF1-7C598F9362C7} = {04DBDB01-70F4-4E06-B468-8F87850B22BE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {28315BFD-90E7-4E14-A2EA-F3D23AF4126F}

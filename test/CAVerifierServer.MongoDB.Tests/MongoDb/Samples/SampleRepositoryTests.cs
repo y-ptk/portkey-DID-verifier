@@ -16,14 +16,14 @@ namespace CAVerifierServer.MongoDB.Samples;
 [Collection(CAVerifierServerTestConsts.CollectionDefinitionName)]
 public class SampleRepositoryTests : CAVerifierServerMongoDbTestBase
 {
-    // private readonly IRepository<IdentityUser, Guid> _appUserRepository;
+    private readonly IRepository<IdentityUser, Guid> _appUserRepository;
 
-    /*public SampleRepositoryTests()
+    public SampleRepositoryTests()
     {
         _appUserRepository = GetRequiredService<IRepository<IdentityUser, Guid>>();
     }
 
-    [Fact]
+    /*[Fact]
     public async Task Should_Query_AppUser()
     {
         /* Need to manually start Unit Of Work because

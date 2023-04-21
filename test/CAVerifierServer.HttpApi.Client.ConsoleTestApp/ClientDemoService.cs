@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using CAVerifierServer.Account;
-using CAVerifierServer.Hubs;
 using Microsoft.AspNetCore.SignalR.Client;
 using Volo.Abp.Account;
 using Volo.Abp.DependencyInjection;
@@ -33,14 +31,14 @@ public class ClientDemoService : ITransientDependency
             var connection = new HubConnectionBuilder()
                 .WithUrl("http://localhost:5588/ca")
                 .Build();
-            connection.On<HubResponse<string>>("Ping", s => { Console.WriteLine($"Receive ping, requestId={s.RequestId} body={s.Body}"); });
+            /*connection.On<HubResponse<string>>("Ping", s => { Console.WriteLine($"Receive ping, requestId={s.RequestId} body={s.Body}"); });
             connection.On<HubResponse<GenerateSignatureOutput>>("Sin", s =>
             {
                 {
                     Console.WriteLine($"Receive Sin, requestId={s.RequestId} body={s.Body.Signature}");
                     connection.InvokeAsync("Ack", "client_6464", s.RequestId);
                 }
-            });
+            });*/
             await connection.StartAsync().ConfigureAwait(false);
 
             await connection.InvokeAsync("Connect", "client_6464");

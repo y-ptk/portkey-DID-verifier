@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using CAVerifierServer.Grains;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.AspNetCore.Serilog;
@@ -16,5 +17,6 @@ public class CAVerifierServerOrleansSiloModule:AbpModule
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         context.Services.AddHostedService<CAVerifierServerHostedService>();
+        context.Services.AddScoped<JwtSecurityTokenHandler>();
     }
 }
