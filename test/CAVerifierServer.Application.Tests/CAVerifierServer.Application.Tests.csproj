@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>CAVerifierServer</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CAVerifierServer.Application\CAVerifierServer.Application.csproj" />
+    <ProjectReference Include="..\..\src\CAVerifierServer.HttpApi\CAVerifierServer.HttpApi.csproj" />
+    <ProjectReference Include="..\CAVerifierServer.Domain.Tests\CAVerifierServer.Domain.Tests.csproj" />
+    <ProjectReference Include="..\CAVerifierServer.Orleans.TestBase\CAVerifierServer.Orleans.TestBase.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
+    <PackageReference Include="coverlet.collector" Version="3.2.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>
