@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
+using CAVerifierServer.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Volo.Abp.BackgroundJobs;
@@ -39,29 +40,6 @@ public class AwsEmailSender : EmailSenderBase
         // const string configSetHeaderName = "X-SES-CONFIGURATION-SET";
         // mail.Headers.Add(configSetHeaderName, _awsEmailOption.ConfigSet);
         await SendEmailAsync(mail);
-    }
-
-    public async Task SendAsync(MailMessage mail)
-    {
-        using var client = new SmtpClient(_awsEmailOptions.Host, _awsEmailOptions.Port);
-        // Pass SMTP credentials
-        client.Credentials =
-            new NetworkCredential(_awsEmailOptions.SmtpUsername, _awsEmailOptions.SmtpPassword);
-
-        // Enable SSL encryption
-        client.EnableSsl = true;
-        // Try to send the message. Show status in console.
-        try
-        {
-            _logger.LogInformation($"Attempting to send email to {mail.To} via aws");
-            client.Send(mail);
-            _logger.LogInformation($"Email sent to {mail.To} via aws");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"send aws email failed, to={mail.To}");
-            throw ex;
-        }
     }
 
     protected override async Task SendEmailAsync(MailMessage mail)

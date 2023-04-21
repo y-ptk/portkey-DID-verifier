@@ -1,15 +1,7 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Orleans.Configuration;
 using CAVerifierServer;
 using CAVerifierServer.Grains;
-using CAVerifierServer.Grains.Grain;
-using CAVerifierServer.Grains.Options;
-using CAVerifierServer.Grains.State;
-using EventStore.ClientAPI;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
-using Orleans;
+using Microsoft.Extensions.DependencyInjection;
 using Orleans.Hosting;
 using Orleans.TestingHost;
 using Volo.Abp.Caching;
@@ -19,7 +11,7 @@ using Volo.Abp.Reflection;
 
 namespace AElfIndexer.Orleans.TestBase;
 
-public class ClusterFixture:IDisposable,ISingletonDependency
+public class ClusterFixture : IDisposable, ISingletonDependency
 {
     public ClusterFixture()
     {
@@ -36,9 +28,8 @@ public class ClusterFixture:IDisposable,ISingletonDependency
     }
 
     public TestCluster Cluster { get; private set; }
-    
-    
-    
+
+
     private class TestSiloConfigurations : ISiloBuilderConfigurator
     {
         public void Configure(ISiloHostBuilder hostBuilder)
@@ -48,15 +39,15 @@ public class ClusterFixture:IDisposable,ISingletonDependency
                     services.AddMemoryCache();
                     services.AddDistributedMemoryCache();
                     services.AddAutoMapper(typeof(CAVerifierServerGrainsModule).Assembly);
-                    
+
                     services.AddSingleton(typeof(IDistributedCache), typeof(MemoryDistributedCache));
                     services.AddSingleton(typeof(IDistributedCache<,>), typeof(DistributedCache<,>));
-                   
+
                     services.Configure<AbpDistributedCacheOptions>(cacheOptions =>
                     {
                         cacheOptions.GlobalCacheEntryOptions.SlidingExpiration = TimeSpan.FromMinutes(20);
                     });
-                    
+
                     services.OnExposing(onServiceExposingContext =>
                     {
                         //Register types for IObjectMapper<TSource, TDestination> if implements
@@ -67,20 +58,10 @@ public class ClusterFixture:IDisposable,ISingletonDependency
                             )
                         );
                     });
-                    
                 })
-                
-                
-                // .AddRedisGrainStorageAsDefault(optionsBuilder => optionsBuilder.Configure(options =>
-                // {
-                //     options.DataConnectionString = "localhost:6379"; // This is the deafult
-                //     options.UseJson = true;
-                //     options.DatabaseNumber = 0;
-                // }))
                 .AddSimpleMessageStreamProvider(CAVerifierServerApplicationConsts.MessageStreamName)
                 .AddMemoryGrainStorage("PubSubStore")
                 .AddMemoryGrainStorageAsDefault();
         }
     }
-    
 }

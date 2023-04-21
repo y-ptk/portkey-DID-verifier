@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using CAVerifierServer.Account;
 using CAVerifierServer.Application;
-using CAVerifierServer.Grains.Grain;
+using CAVerifierServer.Grains.Grain.ThirdPartyVerification;
 
 namespace CAVerifierServer;
 

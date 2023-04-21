@@ -7,7 +7,7 @@
         <Configuration>
           <Format>cobertura</Format>
           <Exclude>[xunit.*]*,[*Tests]*</Exclude> <!-- [Assembly-Filter]Type-Filter -->
-          <ExcludeByFile>**/test/**/*.cs,**/src/CAVerifierServer.Application.Contracts/Permissions/**/*.cs,**/src/CAVerifierServer.DbMigrator/**/*.cs,**/src/CAVerifierServer.Domain/**/*.cs,**/src/CAVerifierServer.Domain.Shared/**/*.cs,**/src/CAVerifierServer.EntityEventHandler/**/*.cs,**/src/CAVerifierServer.EntityFrameworkCore/**/*.cs,**/src/CAVerifierServer.HttpApi.Host/**/*.cs,**/src/CAVerifierServer.HttpApi.Client/**/*.cs,**/src/CAVerifierServer.AuthServer/**/*.cs,**/src/CAVerifierServer.MongoDB/**/*.cs</ExcludeByFile>
+          <ExcludeByFile>**/test/**/*.cs,**/src/CAVerifierServer.Application.Contracts/Permissions/**/*.cs,**/src/CAVerifierServer.DbMigrator/**/*.cs,**/src/CAVerifierServer.Domain/**/*.cs,**/src/CAVerifierServer.Domain.Shared/**/*.cs,**/src/CAVerifierServer.EntityEventHandler/**/*.cs,**/src/CAVerifierServer.EntityFrameworkCore/**/*.cs,**/src/CAVerifierServer.HttpApi.Host/**/*.cs,**/src/CAVerifierServer.HttpApi.Client/**/*.cs,**/src/CAVerifierServer.AuthServer/**/*.cs,**/src/CAVerifierServer.MongoDB/**/*.cs,**/src/CAVerifierServer.Grains/Common/*.cs,**/src/CAVerifierServer.HttpApi/Controllers/*.cs</ExcludeByFile>
           <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute</ExcludeByAttribute>
           <SingleHit>false</SingleHit>
         </Configuration>

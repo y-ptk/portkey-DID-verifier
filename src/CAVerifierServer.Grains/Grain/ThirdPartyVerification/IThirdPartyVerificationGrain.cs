@@ -1,7 +1,7 @@
 using CAVerifierServer.Grains.Dto;
 using Orleans;
 
-namespace CAVerifierServer.Grains.Grain;
+namespace CAVerifierServer.Grains.Grain.ThirdPartyVerification;
 
 public interface IThirdPartyVerificationGrain : IGrainWithStringKey
 {

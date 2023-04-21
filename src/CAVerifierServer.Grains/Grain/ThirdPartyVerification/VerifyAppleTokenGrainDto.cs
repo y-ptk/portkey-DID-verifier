@@ -1,6 +1,6 @@
 using CAVerifierServer.Account;
 
-namespace CAVerifierServer.Grains.Grain;
+namespace CAVerifierServer.Grains.Grain.ThirdPartyVerification;
 
 public class VerifyAppleTokenGrainDto : VerifierCodeDto
 {

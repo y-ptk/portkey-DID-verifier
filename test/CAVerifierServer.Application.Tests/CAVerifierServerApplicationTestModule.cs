@@ -1,13 +1,8 @@
-﻿using CAVerifierServer.Email;
+﻿using System.Collections.Generic;
 using CAVerifierServer.Grain.Tests;
 using CAVerifierServer.Grains.Options;
 using CAVerifierServer.Options;
-using CAVerifierServer.Phone;
-using CAVerifierServer.VerifyCodeSender;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Interfaces;
-using NSubstitute.Extensions;
-using Volo.Abp.Emailing;
 using Volo.Abp.Modularity;
 using Volo.Abp.Sms;
 
@@ -25,17 +20,17 @@ public class CAVerifierServerApplicationTestModule : AbpModule
         context.Services.Configure<VerifierAccountOptions>(o =>
         {
             o.PrivateKey = "XXXXXXXX";
-            o.Address = "XXXXXXXX";
+            o.Address = "XXXXXXXXX";
         });
         
-        context.Services.AddSingleton<IEmailSender, NullEmailSender>();
-        context.Services.AddSingleton<ISMSServiceSender, AwsSmsMessageSender>();
-        context.Services.AddSingleton<ISMSServiceSender, TelesignSmsMessageSender>();
-        context.Services.AddSingleton<ISmsSender, NullSmsSender>();
+        //context.Services.AddSingleton<IEmailSender, NullEmailSender>();
+        context.Services.AddSingleton<ISmsSender,NullSmsSender>();
+
+        
         context.Services.Configure<AwssmsMessageOptions>(o =>
         {
             o.SystemName = "abc";
-            o.AwsAccessKeyId = "qbc";
+            o.AwsAccessKeyId = "abc";
             o.AwsSecretAccessKeyId = "abc";
         });
         context.Services.Configure<TelesignSMSMessageOptions>(o =>
@@ -50,7 +45,42 @@ public class CAVerifierServerApplicationTestModule : AbpModule
             o.Name = "Verifier-001";
             o.CaServerUrl = "http://127.0.0.1:5577";
         });
+
+
+        var chainInfo = new ChainInfo
+        {
+            ChainId = "AELF",
+            BaseUrl = "http://127.0.0.1:8000",
+            ContractAddress = "XXXXXX",
+            IsMainChain = true,
+            PrivateKey = "XXXXXXX"
+        };
+        var dic = new Dictionary<string, ChainInfo>();
+        dic.Add("MockChainId",chainInfo);
+        context.Services.Configure<ChainOptions>(o =>
+        {
+            o.ChainInfos = dic;
+        });
+
+        var smsServiceOption = new SmsServiceOption
+        {
+            IsEnable = true,
+            Ratio = 1
+        };
         
+        var smsServiceOption1 = new SmsServiceOption
+        {
+            IsEnable = true,
+            Ratio = 2
+        };
+        var smsServiceInfoDic = new Dictionary<string, SmsServiceOption>();
+        smsServiceInfoDic.Add("AWS",smsServiceOption);
+        smsServiceInfoDic.Add("Telesign",smsServiceOption1);
+        
+        context.Services.Configure<SmsServiceOptions>(o =>
+        {
+            o.SmsServiceInfos = smsServiceInfoDic;
+        });
         base.ConfigureServices(context);
     }
 

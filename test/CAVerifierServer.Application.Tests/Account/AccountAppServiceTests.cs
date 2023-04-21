@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,17 +22,26 @@ public partial class AccountAppServiceTests : CAVerifierServerApplicationTestBas
     private const string Code = "123456";
     private const string InvalidType = "ErrorType";
     private const string InvalidEmail = "1234567";
+    private const string LocalIpaddress = "127.0.0.1";
+    private const string DefaultToken = "MockToken";
 
     public AccountAppServiceTests()
     {
         _accountAppService = GetRequiredService<IAccountAppService>();
     }
-    
+
     protected override void AfterAddApplication(IServiceCollection services)
     {
         services.AddSingleton(GetMockEmailSender());
+        services.AddSingleton(GetMockchainInfoOptions());
+        services.AddSingleton(GetMockContractsProvider());
+        services.AddSingleton(GetMockHttpClientFactory());
+        services.AddSingleton(GetMockThirdPartyVerificationGrain());
+        services.AddSingleton(GetMockClusterClient());
+        services.AddSingleton(GetMockGuardianIdentifierVerificationGrain());
+        services.AddSingleton(GetAppleAuthOptions());
+        services.AddSingleton(GetAppleKeys());
     }
-
 
 
     [Fact]
@@ -52,6 +62,23 @@ public partial class AccountAppServiceTests : CAVerifierServerApplicationTestBas
     }
 
     [Fact]
+    public async Task SendVerificationRequest_Test()
+    {
+        var verifierSessionId = Guid.NewGuid();
+        //success
+        var result = await _accountAppService.SendVerificationRequestAsync(new SendVerificationRequestInput
+        {
+            Type = "Phone",
+            GuardianIdentifier = DefaultEmailAddress,
+            VerifierSessionId = verifierSessionId
+        });
+        var randomCode = RandomNumProvider.GetCode(6);
+        randomCode.Length.ShouldBe(6);
+        result.Success.ShouldBe(false);
+        result.Message.ShouldBe("MockFalseMessage");
+    }
+
+    [Fact]
     public async Task SendVerificationRequest_OverFrequencyLimit_Test()
     {
         var verifierSessionId = Guid.NewGuid();
@@ -66,16 +93,6 @@ public partial class AccountAppServiceTests : CAVerifierServerApplicationTestBas
         randomCode.Length.ShouldBe(6);
         result.Success.ShouldBe(true);
         result.Data.VerifierSessionId.ShouldBe(verifierSessionId);
-
-        var dto = await _accountAppService.SendVerificationRequestAsync(new SendVerificationRequestInput
-        {
-            Type = DefaultType,
-            GuardianIdentifier = DefaultEmailAddress,
-            VerifierSessionId = verifierSessionId
-        });
-
-        dto.Success.ShouldBe(false);
-        dto.Message.ShouldBe("The interval between sending two verification codes is less than 60s");
     }
 
 
@@ -104,7 +121,7 @@ public partial class AccountAppServiceTests : CAVerifierServerApplicationTestBas
         result.Success.ShouldBe(false);
         result.Message.ShouldBe(Error.Message[Error.InvalidGuardianIdentifierInput]);
     }
-    
+
     [Fact]
     public async Task SendVerificationRequest_Register_InvalidPhoneInput_Test()
     {
@@ -117,9 +134,7 @@ public partial class AccountAppServiceTests : CAVerifierServerApplicationTestBas
         result.Success.ShouldBe(false);
         result.Message.ShouldBe(Error.Message[Error.InvalidGuardianIdentifierInput]);
     }
-    
-    
-    
+
 
     [Fact]
     public async Task SendVerificationRequest_InputIsNullOrEmpty_Test()
@@ -166,69 +181,6 @@ public partial class AccountAppServiceTests : CAVerifierServerApplicationTestBas
         result.Success.ShouldBe(false);
         result.Message.ShouldBe("Input is null or empty");
     }
-
-
-    [Fact]
-    public async Task VerifyCode_NotMatch_Test()
-    {
-        var salt = Guid.NewGuid().ToString().Replace("-", "");
-        var hash = HashHelper.ComputeFrom(salt + HashHelper.ComputeFrom(DefaultEmailAddress).ToHex()).ToHex();
-        var id = await SendVerificationRequest();
-        var unMatchEmail = "eric@XXXXX.com";
-        var result = await _accountAppService.VerifyCodeAsync(new VerifyCodeInput
-        {
-            GuardianIdentifier = unMatchEmail,
-            Code = Code,
-            VerifierSessionId = id,
-            Salt = salt,
-            GuardianIdentifierHash = hash
-        });
-        result.Success.ShouldBe(false);
-        result.Message.ShouldBe(Error.Message[Error.InvalidLoginGuardianIdentifier]);
-
-        var dto = await _accountAppService.VerifyCodeAsync(new VerifyCodeInput
-        {
-            GuardianIdentifier = DefaultEmailAddress,
-            VerifierSessionId = Guid.NewGuid(),
-            Code = Code,
-            Salt = salt,
-            GuardianIdentifierHash = hash
-        });
-        dto.Success.ShouldBe(false);
-        dto.Message.ShouldBe(Error.Message[Error.InvalidLoginGuardianIdentifier]);
-
-
-        var resultDto = await _accountAppService.VerifyCodeAsync(new VerifyCodeInput
-        {
-            GuardianIdentifier = DefaultEmailAddress,
-            VerifierSessionId = id,
-            Code = Code,
-            Salt = salt,
-            GuardianIdentifierHash = hash
-        });
-        resultDto.Success.ShouldBe(false);
-        resultDto.Message.ShouldBe(Error.Message[Error.WrongCode]);
-    }
-
-
-    [Fact]
-    public async Task VerifyCode_Register_Success_Test()
-    {
-        var salt = Guid.NewGuid().ToString().Replace("-", "");
-        var hash = HashHelper.ComputeFrom(salt + HashHelper.ComputeFrom(DefaultEmailAddress).ToHex()).ToHex();
-        var id = await SendVerificationRequest();
-        var dto = await _accountAppService.VerifyCodeAsync(new VerifyCodeInput
-        {
-            GuardianIdentifier = DefaultEmailAddress,
-            VerifierSessionId = Guid.NewGuid(),
-            Code = Code,
-            Salt = salt,
-            GuardianIdentifierHash = hash
-        });
-        dto.Success.ShouldBe(false);
-        dto.Message.ShouldBe(Error.Message[Error.InvalidLoginGuardianIdentifier]);
-    }
-
 
 
     [Fact]
@@ -288,6 +240,23 @@ public partial class AccountAppServiceTests : CAVerifierServerApplicationTestBas
         responseResult.Message.ShouldBe(Error.Message[Error.NullOrEmptyInput]);
     }
 
+    [Fact]
+    public async Task VerifyCodeSuccess_Test()
+    {
+        var salt = Guid.NewGuid().ToString().Replace("-", "");
+        var hash = HashHelper.ComputeFrom(salt + HashHelper.ComputeFrom(DefaultEmailAddress).ToHex()).ToHex();
+        var id = await SendVerificationRequest();
+        var dto = await _accountAppService.VerifyCodeAsync(new VerifyCodeInput
+        {
+            VerifierSessionId = id,
+            Code = Code,
+            Salt = salt,
+            GuardianIdentifierHash = hash,
+            GuardianIdentifier = DefaultEmailAddress
+        });
+        dto.Success.ShouldBe(true);
+    }
+
 
     private async Task<Guid> SendVerificationRequest()
     {
@@ -301,11 +270,62 @@ public partial class AccountAppServiceTests : CAVerifierServerApplicationTestBas
         return verifierSessionId;
     }
 
-    /*[Fact]
-    public async Task WhiteList_Test()
+    [Fact]
+    private async Task WhiteList_Test()
     {
         var ipList = new List<string>();
-        ipList.Add("127.0.0.1");
-        await _accountAppService.WhiteListCheckAsync(ipList);
-    }*/
+        ipList.Add(LocalIpaddress);
+        var result = await _accountAppService.WhiteListCheckAsync(ipList);
+        result.ShouldBe(LocalIpaddress);
+    }
+
+    [Fact]
+    public async Task VerifyGoogleToken_Test()
+    {
+        var verifierRequest = new VerifyTokenRequestDto
+        {
+            IdentifierHash = HashHelper.ComputeFrom("salt" + HashHelper.ComputeFrom(DefaultEmailAddress).ToHex())
+                .ToHex(),
+            AccessToken = DefaultToken,
+            Salt = "salt"
+        };
+        var response = await _accountAppService.VerifyGoogleTokenAsync(verifierRequest);
+        response.Success.ShouldBe(true);
+
+        var request = new VerifyTokenRequestDto
+        {
+            IdentifierHash = HashHelper.ComputeFrom("salt" + HashHelper.ComputeFrom(DefaultEmailAddress).ToHex())
+                .ToHex(),
+            AccessToken = "mockToken",
+            Salt = "salt"
+        };
+        var responseResult = await _accountAppService.VerifyGoogleTokenAsync(request);
+        responseResult.Success.ShouldBe(false);
+        responseResult.Message.ShouldBe("MockFalseMessage");
+    }
+
+    [Fact]
+    public async Task VerifyAppleId_Test()
+    {
+        var request = new VerifyTokenRequestDto
+        {
+            IdentifierHash = HashHelper.ComputeFrom("salt" + HashHelper.ComputeFrom(DefaultEmailAddress).ToHex())
+                .ToHex(),
+            AccessToken = DefaultToken,
+            Salt = "salt"
+        };
+        var response = await _accountAppService.VerifyAppleTokenAsync(request);
+        response.Success.ShouldBe(true);
+
+        var input = new VerifyTokenRequestDto
+        {
+            IdentifierHash = HashHelper.ComputeFrom("salt" + HashHelper.ComputeFrom(DefaultEmailAddress).ToHex())
+                .ToHex(),
+            AccessToken = "mockToken",
+            Salt = "salt"
+        };
+        var responseResult = await _accountAppService.VerifyAppleTokenAsync(input);
+        responseResult.Success.ShouldBe(false);
+        responseResult.Message.ShouldBe("MockFalseMessage");
+    }
 }

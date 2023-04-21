@@ -1,4 +1,4 @@
-namespace CAVerifierServer.Grains.Grain;
+namespace CAVerifierServer.Grains.Grain.ThirdPartyVerification;
 
 public class ThirdPartyMessage
 {

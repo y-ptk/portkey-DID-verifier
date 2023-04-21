@@ -1,4 +1,4 @@
-namespace CAVerifierServer.Email;
+namespace CAVerifierServer.Options;
 
 public class AwsEmailOptions
 {

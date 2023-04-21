@@ -15,7 +15,7 @@ using Orleans;
 using Volo.Abp.Caching;
 using Volo.Abp.ObjectMapping;
 
-namespace CAVerifierServer.Grains.Grain;
+namespace CAVerifierServer.Grains.Grain.ThirdPartyVerification;
 
 public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, IThirdPartyVerificationGrain
 {
