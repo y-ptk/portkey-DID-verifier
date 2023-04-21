@@ -7,8 +7,7 @@ public class CAVerifierServerSettingDefinitionProvider : SettingDefinitionProvid
 {
     public override void Define(ISettingDefinitionContext context)
     {
-    
-        //ghezzvdgkxzobecf
+
         
     }
 }

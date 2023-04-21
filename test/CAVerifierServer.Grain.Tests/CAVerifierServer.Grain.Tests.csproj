@@ -27,9 +27,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\src\CAVerifierServer.Grains\CAVerifierServer.Grains.csproj" />
         <ProjectReference Include="..\CAVerifierServer.Domain.Tests\CAVerifierServer.Domain.Tests.csproj" />
-        <!--        <ProjectReference Include="..\CAServer.Orleans.TestBase\CAServer.Orleans.TestBase.csproj" />-->
         <ProjectReference Include="..\CAVerifierServer.TestBase\CAVerifierServer.TestBase.csproj" />
-<!--        <ProjectReference Include="..\..\src\CAServer.CoinGeckoApi\CAServer.CoinGeckoApi.csproj" />-->
     </ItemGroup>
 
 </Project>

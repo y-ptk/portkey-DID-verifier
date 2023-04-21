@@ -1,6 +1,7 @@
 using System;
-using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using CAVerifierServer.CustomException;
 using CAVerifierServer.Options;
 using CAVerifierServer.VerifyCodeSender;
 using Microsoft.Extensions.Logging;
@@ -17,12 +18,15 @@ public class TelesignSmsMessageSender : ISMSServiceSender
     private readonly VerifierInfoOptions _verifierInfoOptions;
     private readonly TelesignSMSMessageOptions _telesignSMSMessageOptions;
     private readonly MessagingClient _messagingClient;
+    private const string PhoneNumReplacement = "$1****$2";
+    private readonly Regex _regex;
 
     public TelesignSmsMessageSender(ILogger<TelesignSmsMessageSender> logger,
         IOptions<VerifierInfoOptions> verifierInfoOptions,
         IOptions<TelesignSMSMessageOptions> telesignSmsMessageOptions)
     {
         _logger = logger;
+        _regex = new Regex("(.{6}).*(.{4})");
         _telesignSMSMessageOptions = telesignSmsMessageOptions.Value;
         _verifierInfoOptions = verifierInfoOptions.Value;
         _messagingClient =
@@ -42,13 +46,14 @@ public class TelesignSmsMessageSender : ISMSServiceSender
         try
         {
             _logger.LogDebug("Telesign SMS Service sending SMSMessage to {phoneNum}",
-                smsMessage.PhoneNumber);
+                _regex.Replace(smsMessage.PhoneNumber, PhoneNumReplacement));
             var response = await _messagingClient.MessageAsync(phoneNumber, message, _telesignSMSMessageOptions.Type);
             if (!response.OK)
             {
                 _logger.LogError(
                     "Telesign SMS Service sending SMSMessage failed to {phoneNum}",
-                    smsMessage.PhoneNumber);
+                    _regex.Replace(smsMessage.PhoneNumber, PhoneNumReplacement));
+                throw new SmsSenderFailedException("Telesign SMS Service sending SMSMessage failed");
             }
         }
         catch (Exception ex)

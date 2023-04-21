@@ -2,15 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AElf;
-using AElf.Client.Dto;
-using AElf.Client.Service;
 using CAVerifierServer.Application;
+using CAVerifierServer.Contracts;
 using CAVerifierServer.Grains.Grain;
+using CAVerifierServer.Grains.Grain.ThirdPartyVerification;
 using CAVerifierServer.Options;
 using CAVerifierServer.VerifyCodeSender;
-using Google.Protobuf;
-using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -34,6 +31,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
     private readonly IDistributedCache<DidServerList> _distributedCache;
     private readonly IObjectMapper _objectMapper;
     private readonly ILogger<AccountAppService> _logger;
+    private readonly IContractsProvider _contractsProvider;
 
     private const string CaServerListKey = "CAServerListKey";
 
@@ -41,13 +39,15 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
         IOptions<ChainOptions> chainOptions,
         IDistributedCache<DidServerList> distributedCache,
         IEnumerable<IVerifyCodeSender> verifyCodeSenders, IObjectMapper objectMapper,
-        IOptions<WhiteListExpireTimeOptions> whiteListExpireTimeOption, ILogger<AccountAppService> logger)
+        IOptions<WhiteListExpireTimeOptions> whiteListExpireTimeOption, ILogger<AccountAppService> logger,
+        IContractsProvider contractsProvider)
     {
         _clusterClient = clusterClient;
         _distributedCache = distributedCache;
         _verifyCodeSenders = verifyCodeSenders;
         _objectMapper = objectMapper;
         _logger = logger;
+        _contractsProvider = contractsProvider;
         _whiteListExpireTimeOptions = whiteListExpireTimeOption.Value;
         _chainOptions = chainOptions.Value;
     }
@@ -86,6 +86,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
                     Message = dto.Message
                 };
             }
+
             await verifyCodeSender.SendCodeByGuardianIdentifierAsync(input.GuardianIdentifier, dto.Data.VerifierCode);
             return new ResponseResultDto<SendVerificationRequestDto>
             {
@@ -217,7 +218,9 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
         try
         {
             var grain = _clusterClient.GetGrain<IThirdPartyVerificationGrain>(tokenRequestDto.AccessToken);
-            var resultDto = await grain.VerifyAppleTokenAsync(ObjectMapper.Map<VerifyTokenRequestDto, VerifyTokenGrainDto>(tokenRequestDto));
+            var resultDto =
+                await grain.VerifyAppleTokenAsync(
+                    ObjectMapper.Map<VerifyTokenRequestDto, VerifyTokenGrainDto>(tokenRequestDto));
 
             if (!resultDto.Success)
             {
@@ -263,7 +266,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
         var didServers = new List<DidServer>();
         foreach (var chainInfo in _chainOptions.ChainInfos)
         {
-            var output = await GetCaServersListAsync(chainInfo.Value);
+            var output = await _contractsProvider.GetCaServersListAsync(chainInfo.Value);
             var servers = output.CaServers;
             servers.ForEach(t =>
             {
@@ -274,23 +277,5 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
         }
 
         return didServerList;
-    }
-
-    private async Task<GetCAServersOutput> GetCaServersListAsync(ChainInfo chainInfo)
-    {
-        var client = new AElfClient(chainInfo.BaseUrl);
-        await client.IsConnectedAsync();
-        var ownAddress = client.GetAddressFromPrivateKey(chainInfo.PrivateKey);
-        var methodName = "GetCAServers";
-        var param = new Empty();
-        var transaction = await client.GenerateTransactionAsync(ownAddress,
-            chainInfo.ContractAddress,
-            methodName, param);
-        var txWithSign = client.SignTransaction(chainInfo.PrivateKey, transaction);
-        var result = await client.ExecuteTransactionAsync(new ExecuteTransactionDto
-        {
-            RawTransaction = txWithSign.ToByteArray().ToHex()
-        });
-        return GetCAServersOutput.Parser.ParseFrom(ByteArrayHelper.HexStringToByteArray(result));
     }
 }

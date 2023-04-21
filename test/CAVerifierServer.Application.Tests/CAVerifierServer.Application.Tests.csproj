@@ -10,11 +10,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\CAVerifierServer.Application.Contracts\CAVerifierServer.Application.Contracts.csproj" />
     <ProjectReference Include="..\..\src\CAVerifierServer.Application\CAVerifierServer.Application.csproj" />
-    <!--<ProjectReference Include="..\..\src\CAVerifierServer.HttpApi\CAVerifierServer.HttpApi.csproj" />-->
     <ProjectReference Include="..\CAVerifierServer.Domain.Tests\CAVerifierServer.Domain.Tests.csproj" />
     <ProjectReference Include="..\CAVerifierServer.Grain.Tests\CAVerifierServer.Grain.Tests.csproj" />
-<!--    <ProjectReference Include="..\CAVerifierServer.Domain.Tests\CAVerifierServer.Grain.Tests.csproj" />-->
-    <!--<ProjectReference Include="..\CAVerifierServer.Orleans.TestBase\CAVerifierServer.Orleans.TestBase.csproj" />-->
   </ItemGroup>
 
   <ItemGroup>
