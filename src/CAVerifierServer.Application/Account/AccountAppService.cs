@@ -5,16 +5,15 @@ using System.Threading.Tasks;
 using AElf;
 using AElf.Client.Dto;
 using AElf.Client.Service;
-using CAVerifierServer.AccountAction;
 using CAVerifierServer.Application;
 using CAVerifierServer.Grains.Grain;
 using CAVerifierServer.Options;
+using CAVerifierServer.VerifyCodeSender;
 using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using NUglify.Helpers;
 using Orleans;
 using Volo.Abp;
@@ -87,7 +86,6 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
                     Message = dto.Message
                 };
             }
-
             await verifyCodeSender.SendCodeByGuardianIdentifierAsync(input.GuardianIdentifier, dto.Data.VerifierCode);
             return new ResponseResultDto<SendVerificationRequestDto>
             {
@@ -117,7 +115,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
             input.GuardianIdentifier.IsNullOrEmpty() ||
             input.Salt.IsNullOrEmpty() ||
             input.GuardianIdentifierHash.IsNullOrEmpty()
-            )
+           )
         {
             return new ResponseResultDto<VerifierCodeDto>
             {
@@ -167,16 +165,83 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
         {
             throw new UserFriendlyException("No CAServer is Found");
         }
+
         var servers = didServerList.DidServers.Distinct().ToList();
         var endPoints = new List<string>();
         servers.ForEach(t => { endPoints.Add(t.EndPoint); });
         _logger.LogDebug("CaServerIPList id {ipList} :", string.Join(",", endPoints));
         var caIpList = endPoints.Select(ip => ip.Split("//")[1]).Select(formatter => formatter.Split(":")[0]).ToList();
-        _logger.LogDebug("Formatter ipList is {caIpList}",string.Join(",",caIpList));
+        _logger.LogDebug("Formatter ipList is {caIpList}", string.Join(",", caIpList));
         var result = ipList.Intersect(caIpList).ToList();
-        return result.Count==0?null:result[0];
-        
+        return result.Count == 0 ? null : result[0];
+    }
 
+    public async Task<ResponseResultDto<VerifyGoogleTokenDto>> VerifyGoogleTokenAsync(
+        VerifyTokenRequestDto tokenRequestDto)
+    {
+        try
+        {
+            var grain = _clusterClient.GetGrain<IThirdPartyVerificationGrain>(tokenRequestDto.AccessToken);
+            var resultDto =
+                await grain.VerifyGoogleTokenAsync(
+                    ObjectMapper.Map<VerifyTokenRequestDto, VerifyTokenGrainDto>(tokenRequestDto));
+
+            if (!resultDto.Success)
+            {
+                return new ResponseResultDto<VerifyGoogleTokenDto>
+                {
+                    Success = false,
+                    Message = resultDto.Message
+                };
+            }
+
+            return new ResponseResultDto<VerifyGoogleTokenDto>
+            {
+                Success = true,
+                Data = _objectMapper.Map<VerifyGoogleTokenGrainDto, VerifyGoogleTokenDto>(resultDto.Data)
+            };
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, Error.VerifyCodeErrorLogPrefix + e.Message);
+            return new ResponseResultDto<VerifyGoogleTokenDto>
+            {
+                Message = Error.VerifyCodeErrorLogPrefix + e.Message
+            };
+        }
+    }
+
+    public async Task<ResponseResultDto<VerifyAppleTokenDto>> VerifyAppleTokenAsync(
+        VerifyTokenRequestDto tokenRequestDto)
+    {
+        try
+        {
+            var grain = _clusterClient.GetGrain<IThirdPartyVerificationGrain>(tokenRequestDto.AccessToken);
+            var resultDto = await grain.VerifyAppleTokenAsync(ObjectMapper.Map<VerifyTokenRequestDto, VerifyTokenGrainDto>(tokenRequestDto));
+
+            if (!resultDto.Success)
+            {
+                return new ResponseResultDto<VerifyAppleTokenDto>
+                {
+                    Success = false,
+                    Message = resultDto.Message
+                };
+            }
+
+            return new ResponseResultDto<VerifyAppleTokenDto>
+            {
+                Success = true,
+                Data = _objectMapper.Map<VerifyAppleTokenGrainDto, VerifyAppleTokenDto>(resultDto.Data)
+            };
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, Error.VerifyCodeErrorLogPrefix + e.Message);
+            return new ResponseResultDto<VerifyAppleTokenDto>
+            {
+                Message = Error.VerifyCodeErrorLogPrefix + e.Message
+            };
+        }
     }
 
 

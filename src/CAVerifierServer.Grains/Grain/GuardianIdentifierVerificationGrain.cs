@@ -3,14 +3,15 @@ using AElf;
 using AElf.Cryptography;
 using AElf.Types;
 using CAVerifierServer.Account;
-using CAVerifierServer.Application;
 using CAVerifierServer.Grains.Dto;
 using CAVerifierServer.Grains.Options;
 using CAVerifierServer.Grains.State;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NUglify.Helpers;
-using Orleans.Providers;
 using Orleans;
+using Orleans.Providers;
+using Volo.Abp;
+using Volo.Abp.Timing;
 
 namespace CAVerifierServer.Grains.Grain;
 
@@ -19,14 +20,17 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
     IGuardianIdentifierVerificationGrain
 {
     private const string BASECODE = "0123456789";
-    static Random ranNum = new Random((int)DateTime.Now.Ticks);
 
     private readonly VerifierCodeOptions _verifierCodeOptions;
     private readonly VerifierAccountOptions _verifierAccountOptions;
+    private readonly GuardianTypeOptions _guardianTypeOptions;
+    private readonly IClock _clock;
 
     public GuardianIdentifierVerificationGrain(IOptions<VerifierCodeOptions> verifierCodeOptions,
-        IOptions<VerifierAccountOptions> verifierAccountOptions)
+        IOptions<VerifierAccountOptions> verifierAccountOptions, IOptions<GuardianTypeOptions> guardianTypeOptions, IClock clock)
     {
+        _clock = clock;
+        _guardianTypeOptions = guardianTypeOptions.Value;
         _verifierCodeOptions = verifierCodeOptions.Value;
         _verifierAccountOptions = verifierAccountOptions.Value;
     }
@@ -36,7 +40,7 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
         var builder = new StringBuilder();
         for (var i = 0; i < length; i++)
         {
-            var rnNum = ranNum.Next(BASECODE.Length);
+            var rnNum = RandomHelper.GetRandom(BASECODE.Length);
             builder.Append(BASECODE[rnNum]);
         }
 
@@ -62,13 +66,14 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
         var verifications = State.GuardianTypeVerifications;
         if (verifications != null)
         {
+            var now = _clock.Now;
             verifications.RemoveAll(p =>
-                p.VerificationCodeSentTime.AddMinutes(_verifierCodeOptions.CodeExpireTime) < DateTime.UtcNow);
+                p.VerificationCodeSentTime.AddMinutes(_verifierCodeOptions.CodeExpireTime) < now);
             verifications.RemoveAll(p => p.Verified);
             await WriteStateAsync();
             var totalList = verifications.Where(p =>
                     p.VerificationCodeSentTime.AddMinutes(_verifierCodeOptions.GetCodeFrequencyTimeLimit) >
-                    DateTime.UtcNow)
+                    now)
                 .ToList();
             if (totalList.Count >= _verifierCodeOptions.GetCodeFrequencyLimit)
             {
@@ -98,7 +103,7 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
         //create code
         var randomCode = await GetCodeAsync(6);
         guardianIdentifierVerification.VerificationCode = randomCode;
-        guardianIdentifierVerification.VerificationCodeSentTime = DateTime.UtcNow;
+        guardianIdentifierVerification.VerificationCodeSentTime = _clock.Now;
         verifications ??= new List<GuardianIdentifierVerification>();
         verifications.Add(guardianIdentifierVerification);
         State.GuardianTypeVerifications = verifications;
@@ -111,62 +116,6 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
         return grainDto;
     }
 
-
-    private int VerifyCodeAsync(GuardianIdentifierVerification guardianIdentifierVerification, string code)
-    {
-        //Already Verified
-        if (guardianIdentifierVerification.Verified)
-        {
-            return Error.Verified;
-        }
-
-        //verify code exceed the time limit
-        if (guardianIdentifierVerification.VerificationCodeSentTime.AddMinutes(_verifierCodeOptions.CodeExpireTime) <
-            DateTime.UtcNow)
-        {
-            return Error.Timeout;
-        }
-
-        //error code times
-        if (guardianIdentifierVerification.ErrorCodeTimes > _verifierCodeOptions.RetryTimes)
-        {
-            return Error.TooManyRetries;
-        }
-
-        //verify code is right
-        if (code == guardianIdentifierVerification.VerificationCode)
-        {
-            return 0;
-        }
-
-        guardianIdentifierVerification.ErrorCodeTimes++;
-        return Error.WrongCode;
-    }
-
-    //move to Options
-    private Dictionary<string, GuardianType> GuardianTypeDic = new()
-    {
-        { "Email", GuardianType.OfEmail }
-    };
-
-    private GenerateSignatureOutput GenerateSignature(string guardianType, string salt, string guardianIdentifierHash,
-        string privateKey)
-    {
-        //create signature
-        var verifierSPublicKey =
-            CryptoHelper.FromPrivateKey(ByteArrayHelper.HexStringToByteArray(privateKey)).PublicKey;
-        var verifierAddress = Address.FromPublicKey(verifierSPublicKey);
-        var data =
-            $"{(int)GuardianTypeDic[guardianType]},{guardianIdentifierHash},{DateTime.UtcNow},{verifierAddress.ToBase58()},{salt}";
-        var hashByteArray = HashHelper.ComputeFrom(data).ToByteArray();
-        var signature =
-            CryptoHelper.SignWithPrivateKey(ByteArrayHelper.HexStringToByteArray(privateKey), hashByteArray);
-        return new GenerateSignatureOutput
-        {
-            Data = data,
-            Signature = signature.ToHex()
-        };
-    }
 
     public async Task<GrainResultDto<UpdateVerifierSignatureDto>> VerifyAndCreateSignatureAsync(VerifyCodeInput input)
     {
@@ -192,7 +141,7 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
             return dto;
         }
 
-        guardianTypeVerification.VerifiedTime = DateTime.UtcNow;
+        guardianTypeVerification.VerifiedTime = _clock.Now;
         guardianTypeVerification.Verified = true;
         guardianTypeVerification.Salt = input.Salt;
         guardianTypeVerification.GuardianIdentifierHash = input.GuardianIdentifierHash;
@@ -208,5 +157,57 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
         };
         await WriteStateAsync();
         return dto;
+    }
+
+    private int VerifyCodeAsync(GuardianIdentifierVerification guardianIdentifierVerification, string code)
+    {
+        //Already Verified
+        if (guardianIdentifierVerification.Verified)
+        {
+            return Error.Verified;
+        }
+
+        //verify code exceed the time limit
+        if (guardianIdentifierVerification.VerificationCodeSentTime.AddMinutes(_verifierCodeOptions.CodeExpireTime) <
+            _clock.Now)
+        {
+            return Error.Timeout;
+        }
+
+        //error code times
+        if (guardianIdentifierVerification.ErrorCodeTimes > _verifierCodeOptions.RetryTimes)
+        {
+            return Error.TooManyRetries;
+        }
+
+        //verify code is right
+        if (code == guardianIdentifierVerification.VerificationCode)
+        {
+            return 0;
+        }
+
+        guardianIdentifierVerification.ErrorCodeTimes++;
+        return Error.WrongCode;
+    }
+
+    
+    private GenerateSignatureOutput GenerateSignature(string guardianType, string salt, string guardianIdentifierHash,
+        string privateKey)
+    {
+        var guardianTypeCode = _guardianTypeOptions.GuardianTypeDic[guardianType];
+        //create signature
+        var verifierSPublicKey =
+            CryptoHelper.FromPrivateKey(ByteArrayHelper.HexStringToByteArray(privateKey)).PublicKey;
+        var verifierAddress = Address.FromPublicKey(verifierSPublicKey);
+        var data =
+            $"{guardianTypeCode},{guardianIdentifierHash},{_clock.Now},{verifierAddress.ToBase58()},{salt}";
+        var hashByteArray = HashHelper.ComputeFrom(data).ToByteArray();
+        var signature =
+            CryptoHelper.SignWithPrivateKey(ByteArrayHelper.HexStringToByteArray(privateKey), hashByteArray);
+        return new GenerateSignatureOutput
+        {
+            Data = data,
+            Signature = signature.ToHex()
+        };
     }
 }

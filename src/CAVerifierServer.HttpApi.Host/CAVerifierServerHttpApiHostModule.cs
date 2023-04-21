@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CAVerifierServer.Grains;
-using CAVerifierServer.Hubs;
 using Medallion.Threading;
 using Medallion.Threading.Redis;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -68,7 +67,7 @@ public class CAVerifierServerHttpApiHostModule : AbpModule
         ConfigureCors(context, configuration);
         ConfigureSwaggerServices(context, configuration);
         ConfigureOrleans(context, configuration);
-        Configure<RealIpOptions>(configuration.GetSection("RealIpOptions"));
+        Configure<RealIpOptions>(configuration.GetSection("RealIp"));
 
         // Configure<AbpExceptionHandlingOptions>(options =>
         // {
@@ -201,7 +200,6 @@ public class CAVerifierServerHttpApiHostModule : AbpModule
         var multiplexer = ConnectionMultiplexer
             .Connect(configuration["Redis:Configuration"]);
         context.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
-        Configure<HubCacheOptions>(configuration.GetSection("Hub:Configuration"));
     }
 
     private void ConfigureCors(ServiceConfigurationContext context, IConfiguration configuration)

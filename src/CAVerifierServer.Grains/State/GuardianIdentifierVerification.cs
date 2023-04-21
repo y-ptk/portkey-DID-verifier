@@ -6,8 +6,6 @@ public class GuardianIdentifierVerification
 
     public string GuardianType{ get; set; }
 
-    public int VerificationType { get; set; }
-
     public string VerificationCode{ get; set; }
 
     public DateTime VerificationCodeSentTime{ get; set; }

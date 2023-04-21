@@ -1,4 +1,6 @@
-﻿using Volo.Abp.Identity;
+﻿using System.Threading.Tasks;
+using Shouldly;
+using Volo.Abp.Identity;
 using Xunit;
 
 namespace CAVerifierServer.Samples;
@@ -11,14 +13,14 @@ namespace CAVerifierServer.Samples;
 [Collection(CAVerifierServerTestConsts.CollectionDefinitionName)]
 public class SampleAppServiceTests : CAVerifierServerApplicationTestBase
 {
-    // private readonly IIdentityUserAppService _userAppService;
+    private readonly IIdentityUserAppService _userAppService;
 
-    /*public SampleAppServiceTests()
+    public SampleAppServiceTests()
     {
         _userAppService = GetRequiredService<IIdentityUserAppService>();
-    }*/
+    }
 
-    /*[Fact]
+    [Fact]
     public async Task Initial_Data_Should_Contain_Admin_User()
     {
         //Act
@@ -27,18 +29,6 @@ public class SampleAppServiceTests : CAVerifierServerApplicationTestBase
         //Assert
         result.TotalCount.ShouldBeGreaterThan(0);
         result.Items.ShouldContain(u => u.UserName == "admin");
-    }*/
+    }
 
-
-    /*[Fact]
-    public async Task JsonTest()
-    {
-        var res = new HubResponseCacheEntity<string>(
-            "context 456", "123", "method1");
-        var jsonStr = JsonSerializer.Serialize(res);
-        var ans = JsonSerializer.Deserialize<HubResponseCacheEntity<object>>(jsonStr);
-        Debug.Assert(ans.Method == res.Method);
-        Debug.Assert(ans.Response.RequestId == res.Response.RequestId);
-        Debug.Assert((string)ans.Response.Body == res.Response.Body);
-    }*/
 }

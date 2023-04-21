@@ -22,16 +22,13 @@ public class CAVerifierServerTestBaseModule : AbpModule
     {
 
     }
-
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         Configure<AbpBackgroundJobOptions>(options =>
         {
             options.IsJobExecutionEnabled = false;
         });
-      //  var configuration = context.Services.GetConfiguration();
         context.Services.AddAlwaysAllowAuthorization();
-      //  ConfigureOrleans(context, configuration);
     }
 
     public override void OnApplicationInitialization(ApplicationInitializationContext context)

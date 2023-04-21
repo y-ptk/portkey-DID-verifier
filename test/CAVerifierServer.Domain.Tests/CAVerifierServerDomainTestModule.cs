@@ -1,4 +1,5 @@
 using CAVerifierServer.MongoDB;
+using Volo.Abp;
 using Volo.Abp.Modularity;
 
 namespace CAVerifierServer;
@@ -8,5 +9,16 @@ namespace CAVerifierServer;
     )]
 public class CAVerifierServerDomainTestModule : AbpModule
 {
+
+    public override void ConfigureServices(ServiceConfigurationContext context)
+    {
+        
+    }
+    
+    public override void OnApplicationShutdown(ApplicationShutdownContext context)
+    {
+    }
+    
+    
 
 }

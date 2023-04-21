@@ -1,12 +1,9 @@
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using CAVerifierServer.AccountAction;
 using CAVerifierServer.Email;
+using CAVerifierServer.Options;
 using Microsoft.Extensions.Options;
-using Volo.Abp;
-using Volo.Abp.Auditing;
 using Volo.Abp.Emailing;
-
 
 namespace CAVerifierServer.VerifyCodeSender;
 
@@ -34,7 +31,7 @@ public class EmailVerifyCodeSender : IVerifyCodeSender
             {
                 From = _awsEmailOptions.From,
                 To = guardianIdentifier,
-                Body = EmailConsts.BuildBodyTemplate(_verifierInfoOptions.Name, _awsEmailOptions.Image, CAVerifierServerApplicationConsts.PORTKEY, code),
+                Body = EmailBodyBuilder.BuildBodyTemplate(_verifierInfoOptions.Name, _awsEmailOptions.Image, CAVerifierServerApplicationConsts.PORTKEY, code),
                 Subject = CAVerifierServerApplicationConsts.Subject
             });
         
