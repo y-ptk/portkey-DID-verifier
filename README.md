@@ -1,8 +1,8 @@
 # Portkey DID Verifier
 
- BRANCH | AZURE PIPELINES                                                                                                                                                                                                                                                  | TESTS                                                                                                                                                                                                                                                   | CODE COVERAGE                                                                                                                                                                           
---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
- MASTER | [![Build Status](https://dev.azure.com/Portkey-Finance/Portkey-Finance/_apis/build/status%2FPortkey-Wallet.portkey-DID-verifier?branchName=master)](https://dev.azure.com/Portkey-Finance/Portkey-Finance/_build/latest?definitionId=11&branchName=master) | [![Test Status](https://dev.azure.com/Portkey-Finance/Portkey-Finance/_apis/build/status%2FPortkey-Wallet.portkey-DID-server?branchName=master)](https://dev.azure.com/Portkey-Finance/Portkey-Finance/_build/latest?definitionId=11&branchName=master) | [![codecov](https://codecov.io/gh/Portkey-Wallet/portkey-DID-verifier/branch/master/graph/badge.svg?token=CZMZ5NGDDW)](https://codecov.io/gh/Portkey-Wallet/portkey-DID-verifier) 
+ BRANCH | AZURE PIPELINES                                                                                                                                                                                                                                            | TESTS                                                                                                                                                                                                                                                   | CODE COVERAGE                                                                                                                                                                           
+--------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ MASTER | [![Build Status](https://dev.azure.com/Portkey-Finance/Portkey-Finance/_apis/build/status%2FPortkey-Wallet.portkey-DID-verifier?branchName=master)](https://dev.azure.com/Portkey-Finance/Portkey-Finance/_build/latest?definitionId=13&branchName=master) | [![Test Status](https://dev.azure.com/Portkey-Finance/Portkey-Finance/_apis/build/status%2FPortkey-Wallet.portkey-DID-verifier?branchName=master)](https://dev.azure.com/Portkey-Finance/Portkey-Finance/_build/latest?definitionId=13&branchName=master) | [![codecov](https://codecov.io/gh/Portkey-Wallet/portkey-DID-verifier/branch/master/graph/badge.svg?token=CZMZ5NGDDW)](https://codecov.io/gh/Portkey-Wallet/portkey-DID-verifier) 
 
 
 The project is used to undertake third-party services and verify the legitimacy of CAServer users.The project is developed based on the ABP framework, using the Orleans framework, with Grain as the application's business logic implementation and abstraction, and Silo as the host service.Implementation includes verification code services, third-party login (Google, Apple account), and other functions.
@@ -11,7 +11,7 @@ The project is used to undertake third-party services and verify the legitimacy 
 
 Before cloning the code and running the project, you need to install the following dependencies:
 
-1. Dotnet6.0+
+1. Dotnet7.0+
 2. Mongodb
 3. Redis
 4. Nginx
@@ -29,9 +29,9 @@ The next step is to build the project to ensure everything is working correctly.
 as follows:
 
 ```Bash
-# enter the Launcher folder and build 
+# enter the Launcher folder and publish 
 
-dotnet build
+dotnet publish
 
 
 ```
