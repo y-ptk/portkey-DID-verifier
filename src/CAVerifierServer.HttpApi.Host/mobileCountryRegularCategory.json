@@ -190,7 +190,7 @@
         "MobileRegular": "^(\\+?81|0)\\d{1,4}[ \\-]?\\d{1,4}[ \\-]?\\d{4}$",
         "CountryCode": "+81",
         "Country": "JP"
-        
+
       },
       {
         "MobileRegular": "^(\\+?36)(20|30|70)\\d{7}$",
