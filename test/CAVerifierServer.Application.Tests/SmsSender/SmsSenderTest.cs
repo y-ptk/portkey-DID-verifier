@@ -29,6 +29,7 @@ public partial class SmsSenderTest : CAVerifierServerApplicationTestBase
     protected override void AfterAddApplication(IServiceCollection services)
     {
         services.AddSingleton(GetAwsEmailOptions());
+        services.AddSingleton(GetSmsTemplateOptions());
     }
 
     [Fact]

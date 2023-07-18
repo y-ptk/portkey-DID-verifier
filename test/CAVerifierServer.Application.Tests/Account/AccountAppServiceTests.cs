@@ -252,7 +252,8 @@ public partial class AccountAppServiceTests : CAVerifierServerApplicationTestBas
             Code = Code,
             Salt = salt,
             GuardianIdentifierHash = hash,
-            GuardianIdentifier = DefaultEmailAddress
+            GuardianIdentifier = DefaultEmailAddress,
+            OperationType = "1"
         });
         dto.Success.ShouldBe(true);
     }

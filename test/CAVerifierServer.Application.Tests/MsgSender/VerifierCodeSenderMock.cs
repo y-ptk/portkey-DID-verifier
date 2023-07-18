@@ -51,13 +51,17 @@ public partial class VerifierCodeSenderTest
         var smsServiceDic = new Dictionary<string, SmsServiceOption>();
         smsServiceDic.Add("MockSmsServiceSender", new SmsServiceOption
         {
-            IsEnable = true,
-            Ratio = 1
+            SupportingCountriesRadio = new Dictionary<string, int>
+            {
+                { "CN", 1 }
+            },
         });
         smsServiceDic.Add("MockSmsServiceSender2", new SmsServiceOption
         {
-            IsEnable = true,
-            Ratio = 2
+            SupportingCountriesRadio = new Dictionary<string, int>
+            {
+                { "CN", 1 }
+            },
         });
         return new OptionsWrapper<SmsServiceOptions>(
             new SmsServiceOptions
