@@ -7,7 +7,7 @@
         "Country": "CN"
       },
       {
-        "MobileRegular": "^(\\+?0?65\\-?)?\\d{10}$",
+        "MobileRegular": "^(?:\\+65)?[689]\\d{7}$",
         "CountryCode": "+65",
         "Country": "SG"
       },
@@ -52,12 +52,12 @@
         "Country": "FI"
       },
       {
-        "MobileRegular": "^\\+359\\8d{8}$",
+        "MobileRegular": "^(\\+359|0)8[789]\\d{7}$",
         "CountryCode": "+359",
         "Country": "BGR"
       },
       {
-        "MobileRegular": "^(\\+?49[ \\.\\-])?([\\(]{1}[0-9]{1,6}[\\)])?([0-9 \\.\\-\\/]{3,20})((x|ext|extension)[ ]?[0-9]{1,4})?$",
+        "MobileRegular": "^(?:\\+49|0)[1-9]\\d{1,14}$",
         "CountryCode": "+49",
         "Country": "DE"
       },
@@ -67,7 +67,7 @@
         "Country": "LVA"
       },
       {
-        "MobileRegular": "^(\\\\+370|8)(6\\d{7})$",
+        "MobileRegular": "^\\+370\\d{8}$",
         "CountryCode": "+370",
         "Country": "LT"
       },
