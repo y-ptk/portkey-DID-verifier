@@ -46,7 +46,7 @@ public partial class SmsSenderTest
         var smsServiceDic = new Dictionary<string, SmsServiceOption>();
         smsServiceDic.Add("MockSmsServiceSender", new SmsServiceOption
         {
-            SupportingCountriesRadio = new Dictionary<string, int>
+            SupportingCountriesRatio = new Dictionary<string, int>
             {
                 { "CN", 1 }
             },
