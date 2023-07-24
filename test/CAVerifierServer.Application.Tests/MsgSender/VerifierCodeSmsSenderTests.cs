@@ -23,12 +23,13 @@ public partial class VerifierCodeSmsSenderTests : CAVerifierServerApplicationTes
     private const string PhoneType = "Phone";
     private const string UnSupportType = "InvalidateType";
     private const string DefaultCode = "123456";
-    private const string FakePhoneNum = "+861234567890";
+    private const string FakePhoneNum = "+8613456789012";
 
     protected override void AfterAddApplication(IServiceCollection services)
     {
         services.AddSingleton(GetSmsServiceOptions());
         services.AddSingleton(GetMockSmsServiceSender());
+        services.AddSingleton(GetMockMobileCountryRegularCategoryOptions());
         base.AfterAddApplication(services);
     }
 
