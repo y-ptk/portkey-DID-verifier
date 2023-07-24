@@ -57,4 +57,25 @@ public partial class VerifierCodeSmsSenderTests
             .Returns(Task.CompletedTask);
         return mockSmsSender.Object;
     }
+
+
+    private IOptionsSnapshot<MobileCountryRegularCategoryOptions> GetMockMobileCountryRegularCategoryOptions()
+    {
+        var mockMobileCountryRegularCategoryOptions = new Mock<IOptionsSnapshot<MobileCountryRegularCategoryOptions>>();
+        var list = new List<MobileInfo>
+        {
+            new MobileInfo
+            {
+                CountryCode = "+86",
+                Country = "CN",
+                MobileRegular = @"^(\\+?0?86\\-?)?1[3456789]\\d{9}$"
+            }
+        };
+        mockMobileCountryRegularCategoryOptions.Setup(o => o.Value).Returns(
+            new MobileCountryRegularCategoryOptions
+            {
+                MobileInfos = list
+            });
+        return mockMobileCountryRegularCategoryOptions.Object;
+    }
 }
