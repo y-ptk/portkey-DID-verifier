@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,9 +26,10 @@ public partial class VerifierCodeSmsSenderTests : CAVerifierServerApplicationTes
 
     protected override void AfterAddApplication(IServiceCollection services)
     {
-        services.AddSingleton(GetSmsServiceOptions());
         services.AddSingleton(GetMockSmsServiceSender());
         services.AddSingleton(GetMockMobileCountryRegularCategoryOptions());
+        services.AddSingleton(GetMockSmsServiceOptions());
+        services.AddSingleton(GetMockSMSTemplateOptions());
         base.AfterAddApplication(services);
     }
 
@@ -44,7 +44,20 @@ public partial class VerifierCodeSmsSenderTests : CAVerifierServerApplicationTes
         phoneVerifierCodeSender.Type.ShouldBe("Phone");
         var verifierCodeSender = _verifyCodeSender.FirstOrDefault(v => v.Type == UnSupportType);
         verifierCodeSender.ShouldBe(null);
-
         await phoneVerifierCodeSender.SendCodeByGuardianIdentifierAsync(FakePhoneNum, DefaultCode);
+    }
+    
+    [Fact]
+    public async Task SendCodeByGuardianIdentifier_InvalidateParam()
+    {
+        var emailVerifyCodeSender = _verifyCodeSender.FirstOrDefault(v => v.Type == EmailType);
+        emailVerifyCodeSender.ShouldNotBe(null);
+        emailVerifyCodeSender.Type.ShouldBe("Email");
+        var phoneVerifierCodeSender = _verifyCodeSender.FirstOrDefault(v => v.Type == PhoneType);
+        phoneVerifierCodeSender.ShouldNotBe(null);
+        phoneVerifierCodeSender.Type.ShouldBe("Phone");
+        var verifierCodeSender = _verifyCodeSender.FirstOrDefault(v => v.Type == UnSupportType);
+        verifierCodeSender.ShouldBe(null);
+        await phoneVerifierCodeSender.SendCodeByGuardianIdentifierAsync("", DefaultCode);
     }
 }

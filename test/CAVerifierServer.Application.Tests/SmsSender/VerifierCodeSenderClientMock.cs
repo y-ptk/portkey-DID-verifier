@@ -8,7 +8,6 @@ using CAVerifierServer.Options;
 using CAVerifierServer.VerifyCodeSender;
 using Microsoft.Extensions.Options;
 using Moq;
-using NSubstitute;
 using Volo.Abp.Emailing;
 using Volo.Abp.Sms;
 

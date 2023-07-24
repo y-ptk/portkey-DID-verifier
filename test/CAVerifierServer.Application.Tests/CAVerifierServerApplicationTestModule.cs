@@ -58,27 +58,6 @@ public class CAVerifierServerApplicationTestModule : AbpModule
         var dic = new Dictionary<string, ChainInfo>();
         dic.Add("MockChainId", chainInfo);
         context.Services.Configure<ChainOptions>(o => { o.ChainInfos = dic; });
-
-        var smsServiceOption = new SmsServiceOption
-        {
-            SupportingCountriesRatio = new Dictionary<string, int>
-            {
-                { "CN", 1 }
-            },
-        };
-
-        var smsServiceOption1 = new SmsServiceOption
-        {
-            SupportingCountriesRatio = new Dictionary<string, int>
-            {
-                { "CN", 1 }
-            },
-        };
-        var smsServiceInfoDic = new Dictionary<string, SmsServiceOption>();
-        smsServiceInfoDic.Add("AWS", smsServiceOption);
-        smsServiceInfoDic.Add("Telesign", smsServiceOption1);
-
-        context.Services.Configure<SmsServiceOptions>(o => { o.SmsServiceInfos = smsServiceInfoDic; });
         base.ConfigureServices(context);
     }
 }
