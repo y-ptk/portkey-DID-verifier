@@ -26,7 +26,8 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
     private readonly IClock _clock;
 
     public GuardianIdentifierVerificationGrain(IOptions<VerifierCodeOptions> verifierCodeOptions,
-        IOptions<VerifierAccountOptions> verifierAccountOptions, IOptions<GuardianTypeOptions> guardianTypeOptions, IClock clock)
+        IOptions<VerifierAccountOptions> verifierAccountOptions, IOptions<GuardianTypeOptions> guardianTypeOptions,
+        IClock clock)
     {
         _clock = clock;
         _guardianTypeOptions = guardianTypeOptions.Value;
@@ -125,6 +126,7 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
             dto.Message = Error.Message[Error.InvalidLoginGuardianIdentifier];
             return dto;
         }
+
         verifications = verifications.Where(p => p.VerifierSessionId == input.VerifierSessionId).ToList();
         if (verifications.Count == 0)
         {
@@ -145,7 +147,7 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
         guardianTypeVerification.Salt = input.Salt;
         guardianTypeVerification.GuardianIdentifierHash = input.GuardianIdentifierHash;
         var signature = GenerateSignature(guardianTypeVerification.GuardianType, guardianTypeVerification.Salt,
-            guardianTypeVerification.GuardianIdentifierHash, _verifierAccountOptions.PrivateKey);
+            guardianTypeVerification.GuardianIdentifierHash, _verifierAccountOptions.PrivateKey, input.OperationType);
         guardianTypeVerification.VerificationDoc = signature.Data;
         guardianTypeVerification.Signature = signature.Signature;
         dto.Success = true;
@@ -189,17 +191,18 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
         return Error.WrongCode;
     }
 
-    
+
     private GenerateSignatureOutput GenerateSignature(string guardianType, string salt, string guardianIdentifierHash,
-        string privateKey)
+        string privateKey, string inputOperationType)
     {
         var guardianTypeCode = _guardianTypeOptions.GuardianTypeDic[guardianType];
         //create signature
         var verifierSPublicKey =
             CryptoHelper.FromPrivateKey(ByteArrayHelper.HexStringToByteArray(privateKey)).PublicKey;
         var verifierAddress = Address.FromPublicKey(verifierSPublicKey);
-        var data =
-            $"{guardianTypeCode},{guardianIdentifierHash},{_clock.Now},{verifierAddress.ToBase58()},{salt}";
+        var data = inputOperationType == "0" || string.IsNullOrWhiteSpace(inputOperationType)
+            ? $"{guardianTypeCode},{guardianIdentifierHash},{_clock.Now},{verifierAddress.ToBase58()},{salt}"
+            : $"{guardianTypeCode},{guardianIdentifierHash},{_clock.Now:yyyy/MM/dd HH:mm:ss.fff},{verifierAddress.ToBase58()},{salt},{inputOperationType}";
         var hashByteArray = HashHelper.ComputeFrom(data).ToByteArray();
         var signature =
             CryptoHelper.SignWithPrivateKey(ByteArrayHelper.HexStringToByteArray(privateKey), hashByteArray);
