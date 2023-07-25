@@ -19,6 +19,7 @@ public partial class SmsSenderTest : CAVerifierServerApplicationTestBase
     private const string Twilio = "Twilio";
     private const string UnSupportType = "InvalidateType";
     private const string FakePhoneNum = "+8613545678901";
+    private const string FakeOverseaPhoneNum = "+12025550100";
     private const string FakeCode = "123456";
 
 
@@ -31,6 +32,7 @@ public partial class SmsSenderTest : CAVerifierServerApplicationTestBase
     {
         services.AddSingleton(GetAwsEmailOptions());
         services.AddSingleton(GetSmsTemplateOptions());
+        services.AddSingleton(GetMockSmsServiceSender());
     }
 
     [Fact]
@@ -45,6 +47,7 @@ public partial class SmsSenderTest : CAVerifierServerApplicationTestBase
         var unSupportSmsSender = smsServiceSender.FirstOrDefault(o => o.ServiceName == UnSupportType);
         unSupportSmsSender.ShouldBeNull();
         var smsMessage = new SmsMessage(FakePhoneNum, FakeCode);
+        var overseaSmsMessage = new SmsMessage(FakeOverseaPhoneNum, FakeCode);
         try
         {
             await telesignSmsSender.SendAsync(smsMessage);
@@ -67,6 +70,15 @@ public partial class SmsSenderTest : CAVerifierServerApplicationTestBase
         {
             await twilioSmsSender.SendAsync(smsMessage);
             
+        }
+        catch (Exception e)
+        {
+            e.ShouldNotBeNull();
+        }
+
+        try
+        {
+            await twilioSmsSender.SendAsync(overseaSmsMessage);
         }
         catch (Exception e)
         {

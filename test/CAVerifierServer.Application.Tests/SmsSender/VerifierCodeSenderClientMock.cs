@@ -85,4 +85,21 @@ public partial class SmsSenderTest
                 SmtpPassword = "MockPassword"
             });
     }
+
+    private IOptions<TwilioSmsMessageOptions> GetMockTwilioOptions()
+    {
+        return new OptionsWrapper<TwilioSmsMessageOptions>(
+            new TwilioSmsMessageOptions
+            {
+                AuthToken = "MockAuthToken",
+                AccountSid = "MockAccountSid",
+                ServiceId = "MockServiceId",
+                TemplateId = "MockTemplateId",
+                DefaultTemplateId = "MockDefaultTemplateId",
+                Channel = "SMS",
+                Locale = "EN"
+                
+                
+            });
+    }
 }
