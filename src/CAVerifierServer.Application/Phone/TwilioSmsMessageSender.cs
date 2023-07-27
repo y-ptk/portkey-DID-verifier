@@ -44,30 +44,17 @@ public class TwilioSmsMessageSender : ISMSServiceSender
         {
             TwilioClient.Init(_twilioSmsMessageOptions.AccountSid, _twilioSmsMessageOptions.AuthToken);
             VerificationResource verification;
-            if (_CNRegex.IsMatch(smsMessage.PhoneNumber))
-            {
-                verification = await VerificationResource.CreateAsync(
-                    to: smsMessage.PhoneNumber,
-                    locale: _twilioSmsMessageOptions.Locale,
-                    customCode: smsMessage.Text,
-                    templateCustomSubstitutions: customSubstitutionsJsonStr,
-                    channel: _twilioSmsMessageOptions.Channel,
-                    pathServiceSid: _twilioSmsMessageOptions.ServiceId
-                );
-            }
-            else
-            {
-                verification = await VerificationResource.CreateAsync(
-                    to: smsMessage.PhoneNumber,
-                    templateSid: _twilioSmsMessageOptions.TemplateId,
-                    locale: _twilioSmsMessageOptions.Locale,
-                    customCode: smsMessage.Text,
-                    templateCustomSubstitutions: customSubstitutionsJsonStr,
-                    channel: _twilioSmsMessageOptions.Channel,
-                    pathServiceSid: _twilioSmsMessageOptions.ServiceId
-                );
-            }
+            var isMatch = _CNRegex.IsMatch(smsMessage.PhoneNumber);
 
+            verification = await VerificationResource.CreateAsync(
+                to: smsMessage.PhoneNumber,
+                templateSid: isMatch ? null : _twilioSmsMessageOptions.TemplateId,
+                locale: _twilioSmsMessageOptions.Locale,
+                customCode: smsMessage.Text,
+                templateCustomSubstitutions: customSubstitutionsJsonStr,
+                channel: _twilioSmsMessageOptions.Channel,
+                pathServiceSid: _twilioSmsMessageOptions.ServiceId
+            );
 
             if (verification.Status != VerifyStatus)
             {
@@ -79,6 +66,14 @@ public class TwilioSmsMessageSender : ISMSServiceSender
 
             _logger.LogDebug("Twilio SMS Service sending SMSMessage to {phoneNum}",
                 _regex.Replace(smsMessage.PhoneNumber, CAVerifierServerApplicationConsts.PhoneNumReplacement));
+
+            _logger.LogDebug("Start Approve SMSMessage to {phoneNum}",
+                _regex.Replace(smsMessage.PhoneNumber, CAVerifierServerApplicationConsts.PhoneNumReplacement));
+            await VerificationCheckResource.CreateAsync(
+                pathServiceSid: _twilioSmsMessageOptions.ServiceId,
+                to: smsMessage.PhoneNumber,
+                code: smsMessage.Text
+            );
         }
         catch (Exception ex)
         {
