@@ -67,10 +67,12 @@ public class TwilioSmsMessageSender : ISMSServiceSender
 
             _logger.LogDebug("Start Approve phone,phoneNum is  {phoneNum}",
                 _regex.Replace(smsMessage.PhoneNumber, CAVerifierServerApplicationConsts.PhoneNumReplacement));
-            await VerificationCheckResource.CreateAsync(
+
+
+            await VerificationResource.UpdateAsync(
+                status: VerificationResource.StatusEnum.Approved,
                 pathServiceSid: _twilioSmsMessageOptions.ServiceId,
-                to: smsMessage.PhoneNumber,
-                code: smsMessage.Text
+                pathSid: verification.Sid
             );
         }
         catch (Exception ex)
