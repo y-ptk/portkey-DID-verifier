@@ -1,8 +1,6 @@
 using System.Text;
-using AElf;
-using AElf.Cryptography;
-using AElf.Types;
 using CAVerifierServer.Account;
+using CAVerifierServer.Grains.Common;
 using CAVerifierServer.Grains.Dto;
 using CAVerifierServer.Grains.Options;
 using CAVerifierServer.Grains.State;
@@ -146,7 +144,8 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
         guardianTypeVerification.Verified = true;
         guardianTypeVerification.Salt = input.Salt;
         guardianTypeVerification.GuardianIdentifierHash = input.GuardianIdentifierHash;
-        var signature = GenerateSignature(guardianTypeVerification.GuardianType, guardianTypeVerification.Salt,
+        var guardianTypeCode = _guardianTypeOptions.GuardianTypeDic[guardianTypeVerification.GuardianType];
+        var signature = CryptographyHelper.GenerateSignature(guardianTypeCode, guardianTypeVerification.Salt,
             guardianTypeVerification.GuardianIdentifierHash, _verifierAccountOptions.PrivateKey, input.OperationType);
         guardianTypeVerification.VerificationDoc = signature.Data;
         guardianTypeVerification.Signature = signature.Signature;
@@ -189,27 +188,5 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
 
         guardianIdentifierVerification.ErrorCodeTimes++;
         return Error.WrongCode;
-    }
-
-
-    private GenerateSignatureOutput GenerateSignature(string guardianType, string salt, string guardianIdentifierHash,
-        string privateKey, string inputOperationType)
-    {
-        var guardianTypeCode = _guardianTypeOptions.GuardianTypeDic[guardianType];
-        //create signature
-        var verifierSPublicKey =
-            CryptoHelper.FromPrivateKey(ByteArrayHelper.HexStringToByteArray(privateKey)).PublicKey;
-        var verifierAddress = Address.FromPublicKey(verifierSPublicKey);
-        var data = inputOperationType == "0" || string.IsNullOrWhiteSpace(inputOperationType)
-            ? $"{guardianTypeCode},{guardianIdentifierHash},{_clock.Now},{verifierAddress.ToBase58()},{salt}"
-            : $"{guardianTypeCode},{guardianIdentifierHash},{_clock.Now:yyyy/MM/dd HH:mm:ss.fff},{verifierAddress.ToBase58()},{salt},{inputOperationType}";
-        var hashByteArray = HashHelper.ComputeFrom(data).ToByteArray();
-        var signature =
-            CryptoHelper.SignWithPrivateKey(ByteArrayHelper.HexStringToByteArray(privateKey), hashByteArray);
-        return new GenerateSignatureOutput
-        {
-            Data = data,
-            Signature = signature.ToHex()
-        };
     }
 }
