@@ -3,11 +3,11 @@ using AElf.Cryptography;
 using AElf.Types;
 using CAVerifierServer.Account;
 
-namespace CAVerifierServer.Common;
+namespace CAVerifierServer.Grains.Common;
 
 public class CryptographyHelper
 {
-    public static GenerateSignatureOutput GenerateSignature(GuardianIdentifierType guardianType, string salt,
+    public static GenerateSignatureOutput GenerateSignature(int guardianType, string salt,
         string guardianIdentifierHash,
         string privateKey,
         string operationType)
@@ -17,8 +17,8 @@ public class CryptographyHelper
             CryptoHelper.FromPrivateKey(ByteArrayHelper.HexStringToByteArray(privateKey)).PublicKey;
         var verifierAddress = Address.FromPublicKey(verifierSPublicKey);
         var data = operationType == "0" || string.IsNullOrWhiteSpace(operationType)
-            ? $"{(int)guardianType},{guardianIdentifierHash},{DateTime.UtcNow},{verifierAddress.ToBase58()},{salt}"
-            : $"{(int)guardianType},{guardianIdentifierHash},{DateTime.UtcNow:yyyy/MM/dd HH:mm:ss.fff},{verifierAddress.ToBase58()},{salt},{operationType}";
+            ? $"{guardianType},{guardianIdentifierHash},{DateTime.UtcNow},{verifierAddress.ToBase58()},{salt}"
+            : $"{guardianType},{guardianIdentifierHash},{DateTime.UtcNow:yyyy/MM/dd HH:mm:ss.fff},{verifierAddress.ToBase58()},{salt},{operationType}";
 
         var hashByteArray = HashHelper.ComputeFrom(data).ToByteArray();
         var signature =
