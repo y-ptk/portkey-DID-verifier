@@ -190,25 +190,4 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
         return Error.WrongCode;
     }
 
-
-    private GenerateSignatureOutput GenerateSignature(string guardianType, string salt, string guardianIdentifierHash,
-        string privateKey, string inputOperationType)
-    {
-        var guardianTypeCode = _guardianTypeOptions.GuardianTypeDic[guardianType];
-        //create signature
-        var verifierSPublicKey =
-            CryptoHelper.FromPrivateKey(ByteArrayHelper.HexStringToByteArray(privateKey)).PublicKey;
-        var verifierAddress = Address.FromPublicKey(verifierSPublicKey);
-        var data = inputOperationType == "0" || string.IsNullOrWhiteSpace(inputOperationType)
-            ? $"{guardianTypeCode},{guardianIdentifierHash},{_clock.Now},{verifierAddress.ToBase58()},{salt}"
-            : $"{guardianTypeCode},{guardianIdentifierHash},{_clock.Now:yyyy/MM/dd HH:mm:ss.fff},{verifierAddress.ToBase58()},{salt},{inputOperationType}";
-        var hashByteArray = HashHelper.ComputeFrom(data).ToByteArray();
-        var signature =
-            CryptoHelper.SignWithPrivateKey(ByteArrayHelper.HexStringToByteArray(privateKey), hashByteArray);
-        return new GenerateSignatureOutput
-        {
-            Data = data,
-            Signature = signature.ToHex()
-        };
-    }
 }
