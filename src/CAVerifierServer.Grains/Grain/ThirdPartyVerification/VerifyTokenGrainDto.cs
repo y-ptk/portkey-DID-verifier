@@ -7,5 +7,7 @@ public class VerifyTokenGrainDto
     public string Salt { get; set; }
     public string OperationType { get; set; }
     
+    public string MerklePath { get; set; }
+    
     
 }
