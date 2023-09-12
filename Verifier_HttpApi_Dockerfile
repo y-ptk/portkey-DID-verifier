@@ -1,0 +1,18 @@
+FROM mcr.microsoft.com/dotnet/sdk:7.0.306-jammy-amd64 AS base
+
+ARG FOLDER=CAVerifierServer.HttpApi.Host
+
+WORKDIR /app
+
+COPY [".", "/app"]
+
+RUN set -x \
+    && dotnet publish src/${FOLDER}/${FOLDER}.csproj -c Release -o /tmp/build
+
+FROM mcr.microsoft.com/dotnet/sdk:7.0.306-jammy-amd64
+
+WORKDIR /app
+
+COPY --from=base /tmp/build .
+
+ENTRYPOINT ["dotnet", "/app/CAVerifierServer.HttpApi.Host.dll"]
