@@ -15,6 +15,6 @@ public class VerifyCodeInput
     
     public string OperationType { get; set; }
     
-    public string MerklePath { get; set; }
+    public string ChainId { get; set; }
 
 }
