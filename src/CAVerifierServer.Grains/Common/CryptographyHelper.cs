@@ -16,8 +16,9 @@ public class CryptographyHelper
         var verifierSPublicKey =
             CryptoHelper.FromPrivateKey(ByteArrayHelper.HexStringToByteArray(privateKey)).PublicKey;
         var verifierAddress = Address.FromPublicKey(verifierSPublicKey);
-        var data =
-            $"{guardianType},{guardianIdentifierHash},{DateTime.UtcNow:yyyy/MM/dd HH:mm:ss.fff},{verifierAddress.ToBase58()},{salt},{operationType},{chainId}";
+        var data = string.IsNullOrWhiteSpace(chainId)
+            ? $"{guardianType},{guardianIdentifierHash},{DateTime.UtcNow:yyyy/MM/dd HH:mm:ss.fff},{verifierAddress.ToBase58()},{salt},{operationType}"
+            : $"{guardianType},{guardianIdentifierHash},{DateTime.UtcNow:yyyy/MM/dd HH:mm:ss.fff},{verifierAddress.ToBase58()},{salt},{operationType},{chainId}";
         var hashByteArray = HashHelper.ComputeFrom(data).ToByteArray();
         var signature =
             CryptoHelper.SignWithPrivateKey(ByteArrayHelper.HexStringToByteArray(privateKey), hashByteArray);
