@@ -147,7 +147,6 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
         guardianTypeVerification.Verified = true;
         guardianTypeVerification.Salt = input.Salt;
         guardianTypeVerification.GuardianIdentifierHash = input.GuardianIdentifierHash;
-        _logger.LogDebug("guardianTypeDic is {dic}",_guardianTypeOptions.GuardianTypeDic.ToString());
         _logger.LogDebug("guardianTypeVerification.GuardianType is {guardianType}",guardianTypeVerification.GuardianType);
         var guardianTypeCode = _guardianTypeOptions.GuardianTypeDic[guardianTypeVerification.GuardianType];
         var signature = CryptographyHelper.GenerateSignature(guardianTypeCode, guardianTypeVerification.Salt,
