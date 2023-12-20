@@ -143,13 +143,17 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
         try
         {
             var securityToken = await ValidateTelegramTokenAsync(tokenGrainDto.AccessToken);
+            var expire = securityToken.ValidTo;
+            if (expire < DateTime.UtcNow)
+            {
+                throw new Exception(ThirdPartyMessage.TokenExpiresMessage);
+            }
             var userInfo = GetTelegramUserInfoFromToken(securityToken);
 
             if (! await _telegramAuthProvider.ValidateTelegramHashAsync(userInfo))
             {
                 throw new Exception(ThirdPartyMessage.InvalidTokenMessage);
             }
-            
 
             userInfo.GuardianType = GuardianIdentifierType.Telegram.ToString();
             userInfo.AuthTime = DateTime.UtcNow;
@@ -270,7 +274,9 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
                     ValidAudiences = _jwtTokenOptions.Audiences,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = rsaSecurityKey
+                    IssuerSigningKey = rsaSecurityKey,
+                    RequireExpirationTime = true,
+                    RequireSignedTokens = true
                 };
                 
                 _jwtSecurityTokenHandler.ValidateToken(identityToken, validateParameter,
