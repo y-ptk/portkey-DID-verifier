@@ -34,10 +34,8 @@ public class TelegramAuthProvider : ISingletonDependency, ITelegramAuthProvider
             return false;
         }
 
-        string token = _telegramAuthOptions.Bots[_telegramAuthOptions.DefaultUsed].Token;
-        string dataCheckString =
-            $"auth_date={telegramAuthDto.AuthDate}\nfirst_name={telegramAuthDto.FirstName}\nid={telegramAuthDto.Id}\nusername={telegramAuthDto.UserName}";
-
+        var token = _telegramAuthOptions.Bots[_telegramAuthOptions.DefaultUsed].Token;
+        var dataCheckString = GetDataCheckString(telegramAuthDto);
         var localHash = await GenerateTelegramHashAsync(token, dataCheckString);
 
         if (!localHash.Equals(telegramAuthDto.Hash))
@@ -61,13 +59,57 @@ public class TelegramAuthProvider : ISingletonDependency, ITelegramAuthProvider
 
         return true;
     }
+    
+    private static string GetDataCheckString(TelegramUserExtraInfo telegramAuthDto)
+    {
+        Dictionary<string, string> keyValuePairs = new Dictionary<string, string>();
+        if (!telegramAuthDto.Id.IsNullOrWhiteSpace())
+        {
+            keyValuePairs.Add("id", telegramAuthDto.Id);
+        }
+
+        if (telegramAuthDto.UserName != null)
+        {
+            keyValuePairs.Add("username", telegramAuthDto.UserName);
+        }
+
+        if (telegramAuthDto.AuthDate != null)
+        {
+            keyValuePairs.Add("auth_date", telegramAuthDto.AuthDate);
+        }
+
+        if (telegramAuthDto.FirstName != null)
+        {
+            keyValuePairs.Add("first_name", telegramAuthDto.FirstName);
+        }
+
+        if (telegramAuthDto.LastName != null)
+        {
+            keyValuePairs.Add("last_name", telegramAuthDto.LastName);
+        }
+
+        if (telegramAuthDto.ProtoUrl != null)
+        {
+            keyValuePairs.Add("photo_url", telegramAuthDto.ProtoUrl);
+        }
+        var sortedByKey = keyValuePairs.Keys.OrderBy(k => k);
+        StringBuilder sb = new StringBuilder();
+        foreach (var key in sortedByKey)
+        {
+            sb.AppendLine($"{key}={keyValuePairs[key]}");
+        }
+
+        sb.Length = sb.Length - 1;
+        return sb.ToString();
+    }
 
     private static Task<string> GenerateTelegramHashAsync(string token, string dataCheckString)
     {
         byte[] tokenBytes = Encoding.UTF8.GetBytes(token);
         byte[] dataCheckStringBytes = Encoding.UTF8.GetBytes(dataCheckString);
+        var computeFrom = HashHelper.ComputeFrom(tokenBytes).ToByteArray();
 
-        using var hmac = new HMACSHA256(tokenBytes);
+        using var hmac = new HMACSHA256(computeFrom);
         var hashBytes = hmac.ComputeHash(dataCheckStringBytes);
         return Task.FromResult(hashBytes.ToHex());
     }
