@@ -63,7 +63,7 @@ public class TelegramAuthProvider : ISingletonDependency, ITelegramAuthProvider
     private static string GetDataCheckString(TelegramUserExtraInfo telegramAuthDto)
     {
         Dictionary<string, string> keyValuePairs = new Dictionary<string, string>();
-        if (!telegramAuthDto.Id.IsNullOrWhiteSpace())
+        if (telegramAuthDto.Id != null)
         {
             keyValuePairs.Add("id", telegramAuthDto.Id);
         }

@@ -252,7 +252,7 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
         }
     }
     
-    private async Task<SecurityToken> ValidateTelegramTokenAsync(string identityToken)
+    private Task<SecurityToken> ValidateTelegramTokenAsync(string identityToken)
     {
         try
         {
@@ -276,7 +276,7 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
                 _jwtSecurityTokenHandler.ValidateToken(identityToken, validateParameter,
                     out SecurityToken validatedToken);
 
-                return validatedToken;
+                return Task.FromResult(validatedToken);
             }
         }
         catch (SecurityTokenExpiredException e)
