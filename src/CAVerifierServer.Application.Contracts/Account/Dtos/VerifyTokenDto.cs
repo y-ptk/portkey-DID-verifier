@@ -4,11 +4,10 @@ namespace CAVerifierServer.Verifier.Dtos;
 
 public class VerifyTokenDto<T>
 {
-    public string VerificationDoc{ get; set; }
-    public string Signature{ get; set; }
+    public string VerificationDoc { get; set; }
+    public string Signature { get; set; }
     public T UserExtraInfo { get; set; }
 }
-
 
 public class TelegramUserExtraInfo
 {
