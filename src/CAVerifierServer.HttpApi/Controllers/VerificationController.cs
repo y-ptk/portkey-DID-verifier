@@ -14,6 +14,8 @@ public class CAVerificationController : CAVerifierServerController
 {
     private readonly IAccountAppService _accountAppService;
 
+    private bool TelegramLoginSwitch = false;
+
     public CAVerificationController(IAccountAppService accountAppService)
     {
         _accountAppService = accountAppService;
@@ -49,7 +51,14 @@ public class CAVerificationController : CAVerifierServerController
     public async Task<ResponseResultDto<VerifyTokenDto<TelegramUserExtraInfo>>> VerifyTelegramTokenAsync(
         VerifyTokenRequestDto tokenRequestDto)
     {
+        if (!TelegramLoginSwitch)
+        {
+            return new ResponseResultDto<VerifyTokenDto<TelegramUserExtraInfo>>
+            {
+                Success = false,
+                Message = "Telegram login not supported"
+            };
+        }
         return await _accountAppService.VerifyTelegramTokenAsync(tokenRequestDto);
-
     }
 }
