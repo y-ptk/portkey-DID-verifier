@@ -14,7 +14,7 @@ public class CAVerificationController : CAVerifierServerController
 {
     private readonly IAccountAppService _accountAppService;
 
-    private readonly bool TelegramLoginSwitch = false;
+    private bool TelegramLoginSwitch = false;
 
     public CAVerificationController(IAccountAppService accountAppService)
     {
