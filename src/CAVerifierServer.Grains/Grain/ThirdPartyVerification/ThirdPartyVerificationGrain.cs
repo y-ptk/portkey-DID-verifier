@@ -1,6 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
-using System.Security.Cryptography;
+using System.Net.Http.Headers;
 using CAVerifierServer.Telegram;
 using CAVerifierServer.Telegram.Options;
 using CAVerifierServer.Verifier.Dtos;
@@ -31,6 +31,7 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
     private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler;
     private readonly JwtTokenOptions _jwtTokenOptions;
     private readonly ITelegramAuthProvider _telegramAuthProvider;
+    private readonly TelegramAuthOptions _telegramAuthOptions;
 
     public ThirdPartyVerificationGrain(IHttpClientFactory httpClientFactory,
         IOptions<VerifierAccountOptions> verifierAccountOptions,
@@ -40,7 +41,8 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
         IDistributedCache<AppleKeys> distributedCache,
         JwtSecurityTokenHandler jwtSecurityTokenHandler,
         IOptionsSnapshot<JwtTokenOptions> jwtTokenOptions,
-        ITelegramAuthProvider telegramAuthProvider)
+        ITelegramAuthProvider telegramAuthProvider,
+        IOptions<TelegramAuthOptions> telegramAuthOptions)
     {
         _httpClientFactory = httpClientFactory;
         _verifierAccountOptions = verifierAccountOptions.Value;
@@ -51,6 +53,7 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
         _jwtSecurityTokenHandler = jwtSecurityTokenHandler;
         _jwtTokenOptions = jwtTokenOptions.Value;
         _telegramAuthProvider = telegramAuthProvider;
+        _telegramAuthOptions = telegramAuthOptions.Value;
     }
 
     public override async Task OnActivateAsync()
@@ -138,7 +141,8 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
         }
     }
 
-    public async Task<GrainResultDto<VerifyTelegramTokenGrainDto>> VerifyTelegramTokenAsync(VerifyTokenGrainDto tokenGrainDto)
+    public async Task<GrainResultDto<VerifyTelegramTokenGrainDto>> VerifyTelegramTokenAsync(
+        VerifyTokenGrainDto tokenGrainDto)
     {
         try
         {
@@ -148,9 +152,10 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
             {
                 throw new Exception(ThirdPartyMessage.TokenExpiresMessage);
             }
+
             var userInfo = GetTelegramUserInfoFromToken(securityToken);
 
-            if (! await _telegramAuthProvider.ValidateTelegramHashAsync(userInfo))
+            if (!await _telegramAuthProvider.ValidateTelegramHashAsync(userInfo))
             {
                 throw new Exception(ThirdPartyMessage.InvalidTokenMessage);
             }
@@ -159,7 +164,8 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
             userInfo.AuthTime = DateTime.UtcNow;
 
             var signatureOutput =
-                CryptographyHelper.GenerateSignature(Convert.ToInt16(GuardianIdentifierType.Telegram), tokenGrainDto.Salt,
+                CryptographyHelper.GenerateSignature(Convert.ToInt16(GuardianIdentifierType.Telegram),
+                    tokenGrainDto.Salt,
                     tokenGrainDto.IdentifierHash,
                     _verifierAccountOptions.PrivateKey, tokenGrainDto.OperationType, tokenGrainDto.ChainId);
 
@@ -255,35 +261,30 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
             throw new Exception(ThirdPartyMessage.InvalidTokenMessage);
         }
     }
-    
-    private Task<SecurityToken> ValidateTelegramTokenAsync(string identityToken)
+
+    private async Task<SecurityToken> ValidateTelegramTokenAsync(string identityToken)
     {
         try
         {
-            var privateKey = Convert.FromBase64String(_jwtTokenOptions.PrivateKey);
-            using (var rsa = new RSACryptoServiceProvider())
+            var jwkDto = await GetTelegramJwkFormTelegramAuthAsync();
+            var jwk = new JsonWebKey(JsonConvert.SerializeObject(jwkDto));
+            var validateParameter = new TokenValidationParameters
             {
-                rsa.ImportPkcs8PrivateKey(privateKey, out _);
-                RsaSecurityKey rsaSecurityKey = new RsaSecurityKey(rsa.ExportParameters(false)); 
-                
-                var validateParameter = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidIssuer = _jwtTokenOptions.Issuer,
-                    ValidateAudience = true,
-                    ValidAudiences = _jwtTokenOptions.Audiences,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = rsaSecurityKey,
-                    RequireExpirationTime = true,
-                    RequireSignedTokens = true
-                };
-                
-                _jwtSecurityTokenHandler.ValidateToken(identityToken, validateParameter,
-                    out SecurityToken validatedToken);
+                ValidateIssuer = true,
+                ValidIssuer = _jwtTokenOptions.Issuer,
+                ValidateAudience = true,
+                ValidAudiences = _jwtTokenOptions.Audiences,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                RequireExpirationTime = true,
+                RequireSignedTokens = true,
+                IssuerSigningKey = jwk
+            };
 
-                return Task.FromResult(validatedToken);
-            }
+            _jwtSecurityTokenHandler.ValidateToken(identityToken, validateParameter,
+                out SecurityToken validatedToken);
+
+            return validatedToken;
         }
         catch (SecurityTokenExpiredException e)
         {
@@ -327,7 +328,7 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
 
         return userInfo;
     }
-    
+
     private TelegramUserExtraInfo GetTelegramUserInfoFromToken(SecurityToken validatedToken)
     {
         var jwtPayload = ((JwtSecurityToken)validatedToken).Payload;
@@ -336,19 +337,22 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
         {
             userInfo.Id = jwtPayload[TelegramTokenClaimNames.UserId].ToString();
         }
+
         if (jwtPayload.ContainsKey(TelegramTokenClaimNames.UserName))
         {
             userInfo.UserName = jwtPayload[TelegramTokenClaimNames.UserName].ToString();
         }
+
         if (jwtPayload.ContainsKey(TelegramTokenClaimNames.AuthDate))
         {
             userInfo.AuthDate = jwtPayload[TelegramTokenClaimNames.AuthDate].ToString();
         }
-        
+
         if (jwtPayload.ContainsKey(TelegramTokenClaimNames.FirstName))
         {
             userInfo.FirstName = jwtPayload[TelegramTokenClaimNames.FirstName].ToString();
         }
+
         if (jwtPayload.ContainsKey(TelegramTokenClaimNames.LastName))
         {
             userInfo.LastName = jwtPayload[TelegramTokenClaimNames.LastName].ToString();
@@ -361,8 +365,9 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
 
         if (jwtPayload.ContainsKey(TelegramTokenClaimNames.ProtoUrl))
         {
-            userInfo.ProtoUrl = jwtPayload[TelegramTokenClaimNames.ProtoUrl].ToString();
+            userInfo.PhotoUrl = jwtPayload[TelegramTokenClaimNames.ProtoUrl].ToString();
         }
+
         return userInfo;
     }
 
@@ -390,5 +395,18 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
         var response = await _httpClientFactory.CreateClient().GetStringAsync(appleKeyUrl);
 
         return JsonConvert.DeserializeObject<AppleKeys>(response);
+    }
+
+    private async Task<JwkDto> GetTelegramJwkFormTelegramAuthAsync()
+    {
+        var url = $"{_telegramAuthOptions.BaseUrl}/api/app/auth/key";
+        var httpClient = _httpClientFactory.CreateClient();
+        httpClient.Timeout = TimeSpan.FromSeconds(_telegramAuthOptions.Timeout);
+        httpClient.DefaultRequestHeaders.Accept.Add(
+            MediaTypeWithQualityHeaderValue.Parse($"application/json"));
+        httpClient.DefaultRequestHeaders.Add("Connection", "close");
+        var response = await httpClient.GetStringAsync(url);
+        var resultDto = JsonConvert.DeserializeObject<GrainResultDto<JwkDto>>(response);
+        return resultDto?.Data;
     }
 }

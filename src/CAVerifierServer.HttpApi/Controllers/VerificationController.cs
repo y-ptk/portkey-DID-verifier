@@ -14,8 +14,6 @@ public class CAVerificationController : CAVerifierServerController
 {
     private readonly IAccountAppService _accountAppService;
 
-    private bool TelegramLoginSwitch = false;
-
     public CAVerificationController(IAccountAppService accountAppService)
     {
         _accountAppService = accountAppService;
@@ -23,11 +21,12 @@ public class CAVerificationController : CAVerifierServerController
 
     [HttpPost]
     [Route("sendVerificationRequest")]
-    public async Task<ResponseResultDto<SendVerificationRequestDto>> SendVerificationRequestAsync(SendVerificationRequestInput input)
+    public async Task<ResponseResultDto<SendVerificationRequestDto>> SendVerificationRequestAsync(
+        SendVerificationRequestInput input)
     {
         return await _accountAppService.SendVerificationRequestAsync(input);
     }
-    
+
     [HttpPost]
     [Route("verifyCode")]
     public async Task<ResponseResultDto<VerifierCodeDto>> VerifyCodeAsync(VerifyCodeInput input)
@@ -36,13 +35,15 @@ public class CAVerificationController : CAVerifierServerController
     }
 
     [HttpPost("verifyGoogleToken")]
-    public async Task<ResponseResultDto<VerifyGoogleTokenDto>> VerifyGoogleTokenAsync(VerifyTokenRequestDto tokenRequestDto)
+    public async Task<ResponseResultDto<VerifyGoogleTokenDto>> VerifyGoogleTokenAsync(
+        VerifyTokenRequestDto tokenRequestDto)
     {
         return await _accountAppService.VerifyGoogleTokenAsync(tokenRequestDto);
     }
 
     [HttpPost("verifyAppleToken")]
-    public async Task<ResponseResultDto<VerifyAppleTokenDto>> VerifyAppleTokenAsync(VerifyTokenRequestDto tokenRequestDto)
+    public async Task<ResponseResultDto<VerifyAppleTokenDto>> VerifyAppleTokenAsync(
+        VerifyTokenRequestDto tokenRequestDto)
     {
         return await _accountAppService.VerifyAppleTokenAsync(tokenRequestDto);
     }
@@ -51,14 +52,6 @@ public class CAVerificationController : CAVerifierServerController
     public async Task<ResponseResultDto<VerifyTokenDto<TelegramUserExtraInfo>>> VerifyTelegramTokenAsync(
         VerifyTokenRequestDto tokenRequestDto)
     {
-        if (!TelegramLoginSwitch)
-        {
-            return new ResponseResultDto<VerifyTokenDto<TelegramUserExtraInfo>>
-            {
-                Success = false,
-                Message = "Telegram login not supported"
-            };
-        }
         return await _accountAppService.VerifyTelegramTokenAsync(tokenRequestDto);
     }
 }

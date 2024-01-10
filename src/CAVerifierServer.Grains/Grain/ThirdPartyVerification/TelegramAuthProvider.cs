@@ -1,6 +1,7 @@
-using System.Security.Cryptography;
+using System.Net.Http.Headers;
 using System.Text;
-using AElf;
+using System.Text.Json;
+using CAVerifierServer.Grains.Dto;
 using CAVerifierServer.Grains.Options;
 using CAVerifierServer.Verifier.Dtos;
 using Microsoft.Extensions.Logging;
@@ -18,12 +19,14 @@ public class TelegramAuthProvider : ISingletonDependency, ITelegramAuthProvider
 {
     private ILogger<TelegramAuthProvider> _logger;
     private readonly TelegramAuthOptions _telegramAuthOptions;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public TelegramAuthProvider(ILogger<TelegramAuthProvider> logger,
-        IOptionsSnapshot<TelegramAuthOptions> telegramAuthOptions)
+        IOptionsSnapshot<TelegramAuthOptions> telegramAuthOptions, IHttpClientFactory httpClientFactory)
     {
         _logger = logger;
         _telegramAuthOptions = telegramAuthOptions.Value;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task<bool> ValidateTelegramHashAsync(TelegramUserExtraInfo telegramAuthDto)
@@ -34,83 +37,35 @@ public class TelegramAuthProvider : ISingletonDependency, ITelegramAuthProvider
             return false;
         }
 
-        var token = _telegramAuthOptions.Bots[_telegramAuthOptions.DefaultUsed].Token;
-        var dataCheckString = GetDataCheckString(telegramAuthDto);
-        var localHash = await GenerateTelegramHashAsync(token, dataCheckString);
+        var url = $"{_telegramAuthOptions.BaseUrl}/api/app/auth/verify";
+        var properties = telegramAuthDto.GetType().GetProperties();
+        var parameters = properties.ToDictionary(property => property.Name,
+            property => property.GetValue(telegramAuthDto)?.ToString());
 
-        if (!localHash.Equals(telegramAuthDto.Hash))
+        var httpClient = _httpClientFactory.CreateClient();
+        httpClient.Timeout = TimeSpan.FromSeconds(_telegramAuthOptions.Timeout);
+        httpClient.DefaultRequestHeaders.Accept.Add(
+            MediaTypeWithQualityHeaderValue.Parse($"application/json"));
+        httpClient.DefaultRequestHeaders.Add("Connection", "close");
+
+
+        var paramsStr = JsonSerializer.Serialize(parameters);
+        HttpContent content = new StringContent(paramsStr, Encoding.UTF8, "application/json");
+        content.Headers.ContentType = MediaTypeHeaderValue.Parse($"application/json");
+
+        var response = await httpClient.PostAsync(url, content);
+        var stream = await response.Content.ReadAsStreamAsync();
+        var resultDto = await JsonSerializer.DeserializeAsync<GrainResultDto<bool>>(stream, new JsonSerializerOptions
         {
-            _logger.LogError("verification of the telegram information has failed. id={0}", telegramAuthDto.Id);
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+
+        if (resultDto == null || !resultDto.Success)
+        {
+            _logger.LogError("verification of the telegram information has failed. {0}", resultDto?.Message);
             return false;
         }
 
-        if (!telegramAuthDto.AuthDate.IsNullOrWhiteSpace())
-        {
-            //validate auth date
-            var expiredUnixTimestamp = (long)DateTime.UtcNow.AddSeconds(-_telegramAuthOptions.Expire)
-                .Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
-            var authDate = long.Parse(telegramAuthDto.AuthDate);
-            if (authDate < expiredUnixTimestamp)
-            {
-                _logger.LogError("verification of the telegram information has failed, login timeout. id={0}", telegramAuthDto.Id);
-                return false;
-            }
-        }
-
-        return true;
-    }
-    
-    private static string GetDataCheckString(TelegramUserExtraInfo telegramAuthDto)
-    {
-        Dictionary<string, string> keyValuePairs = new Dictionary<string, string>();
-        if (telegramAuthDto.Id != null)
-        {
-            keyValuePairs.Add("id", telegramAuthDto.Id);
-        }
-
-        if (telegramAuthDto.UserName != null)
-        {
-            keyValuePairs.Add("username", telegramAuthDto.UserName);
-        }
-
-        if (telegramAuthDto.AuthDate != null)
-        {
-            keyValuePairs.Add("auth_date", telegramAuthDto.AuthDate);
-        }
-
-        if (telegramAuthDto.FirstName != null)
-        {
-            keyValuePairs.Add("first_name", telegramAuthDto.FirstName);
-        }
-
-        if (telegramAuthDto.LastName != null)
-        {
-            keyValuePairs.Add("last_name", telegramAuthDto.LastName);
-        }
-
-        if (telegramAuthDto.ProtoUrl != null)
-        {
-            keyValuePairs.Add("photo_url", telegramAuthDto.ProtoUrl);
-        }
-        var sortedByKey = keyValuePairs.Keys.OrderBy(k => k);
-        StringBuilder sb = new StringBuilder();
-        foreach (var key in sortedByKey)
-        {
-            sb.AppendLine($"{key}={keyValuePairs[key]}");
-        }
-
-        sb.Length = sb.Length - 1;
-        return sb.ToString();
-    }
-
-    private static Task<string> GenerateTelegramHashAsync(string token, string dataCheckString)
-    {
-        byte[] tokenBytes = Encoding.UTF8.GetBytes(token);
-        byte[] dataCheckStringBytes = Encoding.UTF8.GetBytes(dataCheckString);
-        var computeFrom = HashHelper.ComputeFrom(tokenBytes).ToByteArray();
-
-        using var hmac = new HMACSHA256(computeFrom);
-        var hashBytes = hmac.ComputeHash(dataCheckStringBytes);
-        return Task.FromResult(hashBytes.ToHex());
+        return resultDto.Success;
     }
 }
