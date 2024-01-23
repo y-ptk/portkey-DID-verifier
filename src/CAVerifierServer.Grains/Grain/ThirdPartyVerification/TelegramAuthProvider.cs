@@ -22,7 +22,7 @@ public class TelegramAuthProvider : ISingletonDependency, ITelegramAuthProvider
     private readonly IHttpClientFactory _httpClientFactory;
 
     public TelegramAuthProvider(ILogger<TelegramAuthProvider> logger,
-        IOptionsSnapshot<TelegramAuthOptions> telegramAuthOptions, IHttpClientFactory httpClientFactory)
+        IOptions<TelegramAuthOptions> telegramAuthOptions, IHttpClientFactory httpClientFactory)
     {
         _logger = logger;
         _telegramAuthOptions = telegramAuthOptions.Value;
@@ -46,8 +46,6 @@ public class TelegramAuthProvider : ISingletonDependency, ITelegramAuthProvider
         httpClient.Timeout = TimeSpan.FromSeconds(_telegramAuthOptions.Timeout);
         httpClient.DefaultRequestHeaders.Accept.Add(
             MediaTypeWithQualityHeaderValue.Parse($"application/json"));
-        httpClient.DefaultRequestHeaders.Add("Connection", "close");
-
 
         var paramsStr = JsonSerializer.Serialize(parameters);
         HttpContent content = new StringContent(paramsStr, Encoding.UTF8, "application/json");

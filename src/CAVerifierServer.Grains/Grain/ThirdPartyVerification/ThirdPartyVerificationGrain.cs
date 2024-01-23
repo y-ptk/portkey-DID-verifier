@@ -402,9 +402,6 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
         var url = $"{_telegramAuthOptions.BaseUrl}/api/app/auth/key";
         var httpClient = _httpClientFactory.CreateClient();
         httpClient.Timeout = TimeSpan.FromSeconds(_telegramAuthOptions.Timeout);
-        httpClient.DefaultRequestHeaders.Accept.Add(
-            MediaTypeWithQualityHeaderValue.Parse($"application/json"));
-        httpClient.DefaultRequestHeaders.Add("Connection", "close");
         var response = await httpClient.GetStringAsync(url);
         var resultDto = JsonConvert.DeserializeObject<GrainResultDto<JwkDto>>(response);
         return resultDto?.Data;
