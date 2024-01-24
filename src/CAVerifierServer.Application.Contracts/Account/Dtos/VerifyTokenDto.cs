@@ -17,7 +17,7 @@ public class TelegramUserExtraInfo
     public string FirstName { get; set; }
     public string LastName { get; set; }
     public string Hash { get; set; }
-    public string ProtoUrl { get; set; }
+    public string PhotoUrl { get; set; }
     public string GuardianType { get; set; }
     public DateTime AuthTime { get; set; }
 }
