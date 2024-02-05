@@ -83,9 +83,8 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
             tokenDto.GoogleUserExtraInfo.AuthTime = DateTime.UtcNow;
 
             var signatureOutput = CryptographyHelper.GenerateSignature(Convert.ToInt16(GuardianIdentifierType.Google),
-                grainDto.Salt,
-                grainDto.IdentifierHash, _verifierAccountOptions.PrivateKey, grainDto.OperationType,
-                grainDto.ChainId);
+                grainDto.Salt, grainDto.IdentifierHash, _verifierAccountOptions.PrivateKey, grainDto.OperationType,
+                grainDto.ChainId, grainDto.OperationDetails);
 
             tokenDto.Signature = signatureOutput.Signature;
             tokenDto.VerificationDoc = signatureOutput.Data;
@@ -117,8 +116,8 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
 
             var signatureOutput =
                 CryptographyHelper.GenerateSignature(Convert.ToInt16(GuardianIdentifierType.Apple), grainDto.Salt,
-                    grainDto.IdentifierHash,
-                    _verifierAccountOptions.PrivateKey, grainDto.OperationType, grainDto.ChainId);
+                    grainDto.IdentifierHash, _verifierAccountOptions.PrivateKey, grainDto.OperationType,
+                    grainDto.ChainId, grainDto.OperationDetails);
 
             return new GrainResultDto<VerifyAppleTokenGrainDto>
             {
@@ -135,6 +134,37 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
         {
             _logger.LogError(e, Error.VerifyAppleErrorLogPrefix + e.Message);
             return new GrainResultDto<VerifyAppleTokenGrainDto>
+            {
+                Message = e.Message
+            };
+        }
+    }
+
+    public async Task<GrainResultDto<VerifierCodeDto>> VerifyFacebookTokenAsync(VerifyTokenGrainDto grainDto)
+    {
+        try
+        {
+            var signatureOutput =
+                CryptographyHelper.GenerateSignature(Convert.ToInt16(GuardianIdentifierType.Facebook), grainDto.Salt,
+                    grainDto.IdentifierHash,
+                    _verifierAccountOptions.PrivateKey, grainDto.OperationType, grainDto.ChainId,
+                    grainDto.OperationDetails);
+
+            
+            return new GrainResultDto<VerifierCodeDto>
+            {
+                Success = true,
+                Data = new VerifierCodeDto
+                {
+                    Signature = signatureOutput.Signature,
+                    VerificationDoc = signatureOutput.Data
+                }
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, Error.VerifyAppleErrorLogPrefix + e.Message);
+            return new GrainResultDto<VerifierCodeDto>
             {
                 Message = e.Message
             };
@@ -165,9 +195,9 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
 
             var signatureOutput =
                 CryptographyHelper.GenerateSignature(Convert.ToInt16(GuardianIdentifierType.Telegram),
-                    tokenGrainDto.Salt,
-                    tokenGrainDto.IdentifierHash,
-                    _verifierAccountOptions.PrivateKey, tokenGrainDto.OperationType, tokenGrainDto.ChainId);
+                    tokenGrainDto.Salt, tokenGrainDto.IdentifierHash,
+                    _verifierAccountOptions.PrivateKey, tokenGrainDto.OperationType, tokenGrainDto.ChainId,
+                    tokenGrainDto.OperationDetails);
 
             return new GrainResultDto<VerifyTelegramTokenGrainDto>
             {
@@ -188,6 +218,74 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
                 Message = e.Message
             };
         }
+    }
+
+    public async Task<GrainResultDto<VerifyTwitterTokenGrainDto>> VerifyTwitterTokenAsync(VerifyTokenGrainDto grainDto)
+    {
+        try
+        {
+            var userInfo = await GetTwitterUserInfoAsync(grainDto.AccessToken);
+            var tokenDto = new VerifyTwitterTokenGrainDto
+            {
+                TwitterUserExtraInfo = _objectMapper.Map<TwitterUserInfo, TwitterUserExtraInfo>(userInfo)
+            };
+
+            tokenDto.TwitterUserExtraInfo.GuardianType = GuardianIdentifierType.Twitter.ToString();
+            tokenDto.TwitterUserExtraInfo.AuthTime = DateTime.UtcNow;
+
+            var signatureOutput = CryptographyHelper.GenerateSignature(Convert.ToInt16(GuardianIdentifierType.Twitter),
+                grainDto.Salt,
+                grainDto.IdentifierHash, _verifierAccountOptions.PrivateKey, grainDto.OperationType,
+                grainDto.ChainId,grainDto.OperationDetails);
+
+            tokenDto.Signature = signatureOutput.Signature;
+            tokenDto.VerificationDoc = signatureOutput.Data;
+
+            return new GrainResultDto<VerifyTwitterTokenGrainDto>
+            {
+                Success = true,
+                Data = tokenDto
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, Error.VerifyAppleErrorLogPrefix + e.Message);
+            return new GrainResultDto<VerifyTwitterTokenGrainDto>
+            {
+                Message = e.Message
+            };
+        }
+    }
+
+    private async Task<TwitterUserInfo> GetTwitterUserInfoAsync(string accessToken)
+    {
+        var requestUrl = "https://api.twitter.com/2/users/me";
+
+        var client = _httpClientFactory.CreateClient();
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+        var response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Get, requestUrl));
+
+        var result = await response.Content.ReadAsStringAsync();
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            _logger.LogError("get user info unauthorized, result:{message}", response.ToString());
+            throw new Exception(ThirdPartyMessage.InvalidTokenMessage);
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogError("get user info fail, result:{message}", response.ToString());
+            throw new Exception($"StatusCode: {response.StatusCode.ToString()}, Content: {result}");
+        }
+
+        _logger.LogInformation("get user info from twitter, result:{message}", result);
+        var userInfo = JsonConvert.DeserializeObject<TwitterUserInfoDto>(result);
+        if (userInfo?.Data == null)
+        {
+            throw new Exception("Get userInfo from twitter fail.");
+        }
+
+        return userInfo.Data;
     }
 
     private async Task<GoogleUserInfoDto> GetUserInfoFromGoogleAsync(string accessToken)

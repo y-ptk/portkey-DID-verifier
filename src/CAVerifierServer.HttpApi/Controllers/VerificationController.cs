@@ -47,11 +47,33 @@ public class CAVerificationController : CAVerifierServerController
     {
         return await _accountAppService.VerifyAppleTokenAsync(tokenRequestDto);
     }
+    
+    [HttpPost]
+    [Route("verifyFacebookToken")]
+    public async Task<ResponseResultDto<VerifierCodeDto>> VerifyFacebookTokenAsync(VerifyTokenRequestDto input)
+    {
+        return await _accountAppService.VerifyFacebookTokenAsync(input);
+    }
+    
+    [HttpPost]
+    [Route("verifyFacebookAccessTokenAndGetUserId")]
+    public async Task<ResponseResultDto<VerifyFacebookTokenResponseDto>> VerifyFacebookAccessTokenAndGetUserId(VerifyFacebookAccessTokenRequestDto request)
+    {
+        return await _accountAppService.VerifyFacebookAccessTokenAsync(request.AccessToken);
+    }
+    
+    
 
     [HttpPost("verifyTelegramToken")]
     public async Task<ResponseResultDto<VerifyTokenDto<TelegramUserExtraInfo>>> VerifyTelegramTokenAsync(
         VerifyTokenRequestDto tokenRequestDto)
     {
         return await _accountAppService.VerifyTelegramTokenAsync(tokenRequestDto);
+    }
+    
+    [HttpPost("verifyTwitterToken")]
+    public async Task<ResponseResultDto<VerifyTwitterTokenDto>> VerifyAppleTwitterAsync(VerifyTokenRequestDto tokenRequestDto)
+    {
+        return await _accountAppService.VerifyTwitterTokenAsync(tokenRequestDto);
     }
 }
