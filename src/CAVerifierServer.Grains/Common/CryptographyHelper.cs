@@ -18,8 +18,10 @@ public class CryptographyHelper
             ? $"{guardianType},{guardianIdentifierHash},{DateTime.UtcNow:yyyy/MM/dd HH:mm:ss.fff},{verifierAddress.ToBase58()},{salt},{operationType}"
             : $"{guardianType},{guardianIdentifierHash},{DateTime.UtcNow:yyyy/MM/dd HH:mm:ss.fff},{verifierAddress.ToBase58()},{salt},{operationType},{chainId}";
 
-        var realData = operationDetails.IsNullOrWhiteSpace() ? data : $"{data},{operationDetails}";
-        var hashByteArray = HashHelper.ComputeFrom(realData).ToByteArray();
+        data = operationDetails.IsNullOrWhiteSpace()
+            ? data
+            : $"{data},{HashHelper.ComputeFrom(operationDetails).ToHex()}";
+        var hashByteArray = HashHelper.ComputeFrom(data).ToByteArray();
         var signature =
             CryptoHelper.SignWithPrivateKey(ByteArrayHelper.HexStringToByteArray(privateKey), hashByteArray);
         return new GenerateSignatureOutput
