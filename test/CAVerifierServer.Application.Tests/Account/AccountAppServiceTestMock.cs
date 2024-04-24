@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using CAVerifierServer.Account.Dtos;
 using CAVerifierServer.Application;
 using CAVerifierServer.Contracts;
 using CAVerifierServer.Grains.Dto;
@@ -12,6 +13,7 @@ using CAVerifierServer.Grains.Grain.ThirdPartyVerification;
 using CAVerifierServer.Grains.Options;
 using CAVerifierServer.Options;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Moq;
 using Orleans;
 using Volo.Abp.Emailing;
@@ -136,6 +138,17 @@ public partial class AccountAppServiceTests
                     Success = false
                 };
             });
+        
+        mockThirdPartyVerificationGrain.Setup(o=>o.GetUserInfoFromGoogleAsync(It.IsAny<string>())).ReturnsAsync(new GoogleUserInfoDto()
+        {
+        });
+        
+        mockThirdPartyVerificationGrain.Setup(o=>o.GetTwitterUserInfoAsync(It.IsAny<string>())).ReturnsAsync(new TwitterUserInfo()
+        {
+        });
+        
+        
+        
         return mockThirdPartyVerificationGrain.Object;
     }
 
@@ -205,6 +218,15 @@ public partial class AccountAppServiceTests
                     Success = false
                 };
             });
+
+        mockGuardianIdentifierVerificationGrain.Setup(o => o.VerifyRevokeCodeAsync(It.IsAny<VerifyRevokeCodeDto>()))
+            .ReturnsAsync(
+                new GrainResultDto<VerifyRevokeCodeResponseDto>
+                {
+                    Success = true
+                }
+            );
+
 
         return mockGuardianIdentifierVerificationGrain.Object;
     }
