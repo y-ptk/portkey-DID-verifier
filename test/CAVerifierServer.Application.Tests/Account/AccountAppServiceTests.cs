@@ -386,6 +386,16 @@ public partial class AccountAppServiceTests : CAVerifierServerApplicationTestBas
         };
         var response1 = await _accountAppService.VerifyRevokeCodeAsync(request1);
         response1.Success.ShouldBe(false);
+        
+        var request3 = new VerifyRevokeCodeDto
+        {
+            GuardianIdentifier = DefaultEmailAddress,
+            VerifierSessionId = id,
+            Type = DefaultType,
+            VerifyCode = "111111"
+        };
+        var response3 = await _accountAppService.VerifyRevokeCodeAsync(request3);
+        response3.Success.ShouldBe(false);
     }
     
     [Fact]
@@ -413,6 +423,51 @@ public partial class AccountAppServiceTests : CAVerifierServerApplicationTestBas
         var response = await _accountAppService.VerifyRevokeCodeAsync(request);
         response.Success.ShouldBe(true);
     }
+    
+    [Fact]
+    public async Task VerifyRevokeFaceBookTokenAsync_Test()
+    {
+        var request = new VerifyRevokeCodeDto
+        {
+            Type = "FaceBook",
+            VerifyCode = DefaultToken
+        };
+        var response = await _accountAppService.VerifyRevokeCodeAsync(request);
+        response.Success.ShouldBe(false);
+        
+        var request1 = new VerifyRevokeCodeDto
+        {
+            Type = "FaceBook",
+            VerifyCode = "111111"
+        };
+        var response1 = await _accountAppService.VerifyRevokeCodeAsync(request1);
+        response.Success.ShouldBe(false);
+    }
+    
+    [Fact]
+    public async Task VerifyRevokeAppleTokenAsync_Test()
+    {
+        var request = new VerifyRevokeCodeDto
+        {
+            Type = "Apple",
+            VerifyCode = DefaultToken
+        };
+        var response = await _accountAppService.VerifyRevokeCodeAsync(request);
+        response.Success.ShouldBe(true);
+    }
+    
+    [Fact]
+    public async Task VerifyRevokeTelegramTokenAsync_Test()
+    {
+        var request = new VerifyRevokeCodeDto
+        {
+            Type = "Telegram",
+            VerifyCode = DefaultToken
+        };
+        var response = await _accountAppService.VerifyRevokeCodeAsync(request);
+        response.Success.ShouldBe(true);
+    }
+    
     
     
 }

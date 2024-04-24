@@ -13,7 +13,6 @@ using CAVerifierServer.Grains.Grain.ThirdPartyVerification;
 using CAVerifierServer.Grains.Options;
 using CAVerifierServer.Options;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using Moq;
 using Orleans;
 using Volo.Abp.Emailing;
@@ -220,11 +219,23 @@ public partial class AccountAppServiceTests
             });
 
         mockGuardianIdentifierVerificationGrain.Setup(o => o.VerifyRevokeCodeAsync(It.IsAny<VerifyRevokeCodeDto>()))
-            .ReturnsAsync(
-                new GrainResultDto<VerifyRevokeCodeResponseDto>
+            .ReturnsAsync((VerifyRevokeCodeDto dto) =>
                 {
-                    Success = true
+                    if (dto.VerifyCode == DefaultToken)
+                    {
+                        return new GrainResultDto<VerifyRevokeCodeResponseDto>
+                        {
+                            Success = true
+                        };
+                        
+                    }
+
+                    return new GrainResultDto<VerifyRevokeCodeResponseDto>
+                    {
+                        Success = false
+                    };
                 }
+                
             );
 
 
