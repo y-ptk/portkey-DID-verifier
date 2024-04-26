@@ -25,7 +25,7 @@ public class FaceBookRevokeCodeValidator : IVerifyRevokeCodeValidator
         _httpClientFactory = httpClientFactory;
     }
 
-    public string Type => "FaceBook";
+    public string Type => "Facebook";
 
     public async Task<bool> VerifyRevokeCodeAsync(VerifyRevokeCodeDto revokeCodeDto)
     {
@@ -37,12 +37,12 @@ public class FaceBookRevokeCodeValidator : IVerifyRevokeCodeValidator
                 return true;
             }
 
-            _logger.LogError("validate FaceBook token failed");
+            _logger.LogError("validate Facebook token failed");
             return false;
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "validate FaceBook token failed:{reason}", e.Message);
+            _logger.LogError(e, "validate Facebook token failed:{reason}", e.Message);
             return false;
         }
     }
