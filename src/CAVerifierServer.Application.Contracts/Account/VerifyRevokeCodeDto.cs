@@ -16,7 +16,4 @@ public class VerifyRevokeCodeDto
     
     [JsonPropertyName("Type")]
     public string Type{ get; set; }
-    
-    
-    
 }

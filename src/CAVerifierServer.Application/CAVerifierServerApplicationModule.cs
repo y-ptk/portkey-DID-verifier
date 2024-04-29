@@ -52,9 +52,6 @@ public class CAVerifierServerApplicationModule : AbpModule
         context.Services.AddSingleton<IVerifyRevokeCodeValidator, AppleRevokeCodeValidator>();
         context.Services.AddSingleton<IVerifyRevokeCodeValidator, GoogleRevokeCodeValidator>();
     
-        
-        
-        
         context.Services.AddHttpClient();
     }
 }

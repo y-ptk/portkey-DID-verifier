@@ -8,5 +8,4 @@ public interface IVerifyRevokeCodeValidator
     string Type { get; }
 
     Task<bool> VerifyRevokeCodeAsync(VerifyRevokeCodeDto verifyRevokeCodeDto);
-    
 }
