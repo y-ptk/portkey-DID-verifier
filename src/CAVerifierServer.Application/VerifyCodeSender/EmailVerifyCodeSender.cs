@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using CAVerifierServer.Email;
 using CAVerifierServer.Options;
 using Microsoft.Extensions.Options;
+using NUglify.Helpers;
 using Volo.Abp.Emailing;
 
 namespace CAVerifierServer.VerifyCodeSender;
@@ -25,13 +26,14 @@ public class EmailVerifyCodeSender : IVerifyCodeSender
 
 
 
-    public async Task SendCodeByGuardianIdentifierAsync(string guardianIdentifier, string code)
+    public async Task SendCodeByGuardianIdentifierAsync(string guardianIdentifier, string code, string showOperationDetails)
     {
             await SendEmailAsync(new SendEmailInput
             {
                 From = _awsEmailOptions.From,
                 To = guardianIdentifier,
-                Body = EmailBodyBuilder.BuildBodyTemplate(_verifierInfoOptions.Name, _awsEmailOptions.Image, CAVerifierServerApplicationConsts.PORTKEY, code),
+                Body = 
+                    EmailBodyBuilder.BuildBodyTemplateWithOperationDetails(_verifierInfoOptions.Name, _awsEmailOptions.Image, CAVerifierServerApplicationConsts.PORTKEY, code, showOperationDetails),
                 Subject = CAVerifierServerApplicationConsts.Subject
             });
         
