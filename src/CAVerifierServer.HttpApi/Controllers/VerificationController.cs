@@ -33,6 +33,19 @@ public class CAVerificationController : CAVerifierServerController
         var sendVerificationRequestAsync = await _accountAppService.SendVerificationRequestAsync(input);
         return sendVerificationRequestAsync;
     }
+
+    [HttpPost]
+    [Route("verifyCode")]
+    public async Task<ResponseResultDto<VerifierCodeDto>> VerifyCodeAsync(VerifyCodeInput input)
+    {
+        return await _accountAppService.VerifyCodeAsync(input);
+    }
+    
+    [HttpPost("/send/secondary/email/verify")]
+    public async Task<SendVerificationRequestDto> SendVerificationToSecondaryEmail(SecondaryEmailVerificationInput input)
+    {
+        return await _accountAppService.SendVerificationToSecondaryEmail(input);
+    }
     
     [HttpPost]
     [Route("sendNotification")]
@@ -40,13 +53,6 @@ public class CAVerificationController : CAVerifierServerController
         SendNotificationRequest request)
     {
         return await _accountAppService.SendNotificationRequestAsync(request);
-    }
-
-    [HttpPost]
-    [Route("verifyCode")]
-    public async Task<ResponseResultDto<VerifierCodeDto>> VerifyCodeAsync(VerifyCodeInput input)
-    {
-        return await _accountAppService.VerifyCodeAsync(input);
     }
 
     [HttpPost("verifyGoogleToken")]

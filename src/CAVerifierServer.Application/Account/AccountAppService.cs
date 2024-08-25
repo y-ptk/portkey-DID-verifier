@@ -132,6 +132,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
                 Message = "found no emailSender"
             };
         }
+        _logger.LogDebug("SendNotificationRequestAsync email:{0} emailSender.Type:{1}", request.Email, emailSender.Type);
         if (emailSender.ValidateGuardianIdentifier(request.Email))
         {
             return new ResponseResultDto<bool>
@@ -225,6 +226,12 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
                 Message = Error.VerifyCodeErrorLogPrefix + e.Message
             };
         }
+    }
+
+    public Task<SendVerificationRequestDto> SendVerificationToSecondaryEmail(SecondaryEmailVerificationInput input)
+    {
+        //todo secondary email verification content
+        return null;
     }
 
     public async Task<string> WhiteListCheckAsync(List<string> ipList)
