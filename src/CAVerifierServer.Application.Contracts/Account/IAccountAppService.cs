@@ -11,6 +11,8 @@ public interface IAccountAppService : IApplicationService
 
      Task<ResponseResultDto<SendVerificationRequestDto>> SendVerificationRequestAsync(SendVerificationRequestInput input);
      
+     Task<ResponseResultDto<bool>> SendNotificationRequestAsync(SendNotificationRequest request);
+     
      Task<ResponseResultDto<VerifierCodeDto>> VerifyCodeAsync(VerifyCodeInput input);
 
      Task<string> WhiteListCheckAsync(List<string> ipList);

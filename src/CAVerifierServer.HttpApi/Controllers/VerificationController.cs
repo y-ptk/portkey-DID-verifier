@@ -28,6 +28,14 @@ public class CAVerificationController : CAVerifierServerController
         var sendVerificationRequestAsync = await _accountAppService.SendVerificationRequestAsync(input);
         return sendVerificationRequestAsync;
     }
+    
+    [HttpPost]
+    [Route("sendNotification")]
+    public async Task<ResponseResultDto<bool>> SendNotificationRequestAsync(
+        SendNotificationRequest request)
+    {
+        return await _accountAppService.SendNotificationRequestAsync(request);
+    }
 
     [HttpPost]
     [Route("verifyCode")]

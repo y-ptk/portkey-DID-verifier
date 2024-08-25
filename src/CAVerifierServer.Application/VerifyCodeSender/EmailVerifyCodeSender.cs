@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using CAVerifierServer.Account;
 using CAVerifierServer.Email;
 using CAVerifierServer.Options;
 using Microsoft.Extensions.Options;
@@ -24,7 +25,31 @@ public class EmailVerifyCodeSender : IVerifyCodeSender
         _regex = new Regex(CAVerifierServerApplicationConsts.EmailRegex);
     }
 
-
+    public async Task SendTransactionInfoNotificationAsync(string email, EmailTemplate template, string showOperationDetails)
+    {
+        if (EmailTemplate.BeforeApproval.Equals(template))
+        {
+            await SendEmailAsync(new SendEmailInput
+            {
+                From = _awsEmailOptions.From,
+                To = email,
+                Body = 
+                    EmailBodyBuilder.BuildTransactionTemplate(_verifierInfoOptions.Name, _awsEmailOptions.Image, CAVerifierServerApplicationConsts.PORTKEY,  showOperationDetails),
+                Subject = CAVerifierServerApplicationConsts.Subject
+            });
+        }
+        else if (EmailTemplate.AfterApproval.Equals(template))
+        {
+            await SendEmailAsync(new SendEmailInput
+            {
+                From = _awsEmailOptions.From,
+                To = email,
+                Body = 
+                    EmailBodyBuilder.BuildTransactionTemplate(_verifierInfoOptions.Name, _awsEmailOptions.Image, CAVerifierServerApplicationConsts.PORTKEY,  showOperationDetails),
+                Subject = CAVerifierServerApplicationConsts.Subject
+            });
+        }
+    }
 
     public async Task SendCodeByGuardianIdentifierAsync(string guardianIdentifier, string code, string showOperationDetails)
     {

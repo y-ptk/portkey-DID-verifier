@@ -12,4 +12,6 @@ public class VerifyTokenRequestDto
     public string ChainId { get; set; }
     
     public string OperationDetails { get; set; }
+    //the email used for receiving the transaction information before approval
+    public string SecondaryEmail { get; set; }
 }
