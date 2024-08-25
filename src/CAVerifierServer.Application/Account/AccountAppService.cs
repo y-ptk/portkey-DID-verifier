@@ -41,7 +41,6 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
     private readonly FacebookOptions _facebookOptions;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IEnumerable<IVerifyRevokeCodeValidator> _revokeCodeValidators;
-    private readonly EmailVerifyCodeSender _emailSender;
 
     private const string CaServerListKey = "CAServerListKey";
 
@@ -51,8 +50,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
         IEnumerable<IVerifyCodeSender> verifyCodeSenders, IObjectMapper objectMapper,
         IOptions<WhiteListExpireTimeOptions> whiteListExpireTimeOption, ILogger<AccountAppService> logger,
         IContractsProvider contractsProvider, IOptionsSnapshot<FacebookOptions> facebookOptions,
-        IHttpClientFactory httpClientFactory, IEnumerable<IVerifyRevokeCodeValidator> revokeCodeValidators,
-        EmailVerifyCodeSender emailSender)
+        IHttpClientFactory httpClientFactory, IEnumerable<IVerifyRevokeCodeValidator> revokeCodeValidators)
     {
         _clusterClient = clusterClient;
         _distributedCache = distributedCache;
@@ -65,7 +63,6 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
         _facebookOptions = facebookOptions.Value;
         _whiteListExpireTimeOptions = whiteListExpireTimeOption.Value;
         _chainOptions = chainOptions.Value;
-        _emailSender = emailSender;
     }
 
     public async Task<ResponseResultDto<SendVerificationRequestDto>> SendVerificationRequestAsync(
@@ -126,7 +123,16 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
 
     public async Task<ResponseResultDto<bool>> SendNotificationRequestAsync(SendNotificationRequest request)
     {
-        if (_emailSender.ValidateGuardianIdentifier(request.Email))
+        var emailSender = _verifyCodeSenders.FirstOrDefault(v => "Email".Equals(v.Type));
+        if (emailSender == null)
+        {
+            return new ResponseResultDto<bool>
+            {
+                Success = false,
+                Message = "found no emailSender"
+            };
+        }
+        if (emailSender.ValidateGuardianIdentifier(request.Email))
         {
             return new ResponseResultDto<bool>
             {
@@ -137,7 +143,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
 
         try
         {
-            await _emailSender.SendTransactionInfoNotificationAsync(request.Email, request.Template, request.ShowOperationDetails);
+            await emailSender.SendTransactionInfoNotificationAsync(request.Email, request.Template, request.ShowOperationDetails);
             return new ResponseResultDto<bool>
             {
                 Success = true
