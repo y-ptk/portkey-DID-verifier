@@ -260,7 +260,16 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
             var email = GetEmail(tokenRequestDto.SecondaryEmail, resultDto.Data.GoogleUserExtraInfo.Email);
             _logger.LogDebug("VerifyGoogleTokenAsync secondaryEmal:{0} email:{1} result:{2}",
                 tokenRequestDto.SecondaryEmail, resultDto.Data.GoogleUserExtraInfo.Email, email);
-            await SendTransactionInformationBeforeApprovalAsync(email, tokenRequestDto.OperationDetails);
+            var sentResultDto = await SendTransactionInformationBeforeApprovalAsync(email, tokenRequestDto.OperationDetails);
+            if (sentResultDto is not { Success: true })
+            {
+                _logger.LogDebug("VerifyGoogleTokenAsync secondaryEmail failed email:{0} message:{1}",
+                    email, sentResultDto?.Message);
+            }
+            else
+            {
+                _logger.LogDebug("VerifyGoogleTokenAsync secondaryEmail succeed email:{0}", email);
+            }
             return new ResponseResultDto<VerifyGoogleTokenDto>
             {
                 Success = true,

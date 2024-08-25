@@ -3,6 +3,8 @@ using CAVerifierServer.Verifier.Dtos;
 using CAVerifierServer.Account;
 using CAVerifierServer.Account.Dtos;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Volo.Abp;
 
 namespace CAVerifierServer.Controllers;
@@ -14,10 +16,13 @@ namespace CAVerifierServer.Controllers;
 public class CAVerificationController : CAVerifierServerController
 {
     private readonly IAccountAppService _accountAppService;
+    private readonly ILogger<CAVerificationController> _logger;
 
-    public CAVerificationController(IAccountAppService accountAppService)
+    public CAVerificationController(IAccountAppService accountAppService,
+        ILogger<CAVerificationController> logger)
     {
         _accountAppService = accountAppService;
+        _logger = logger;
     }
 
     [HttpPost]
@@ -48,6 +53,7 @@ public class CAVerificationController : CAVerifierServerController
     public async Task<ResponseResultDto<VerifyGoogleTokenDto>> VerifyGoogleTokenAsync(
         VerifyTokenRequestDto tokenRequestDto)
     {
+        _logger.LogDebug("verifyGoogleToken received request:{0}", JsonConvert.SerializeObject(tokenRequestDto));
         return await _accountAppService.VerifyGoogleTokenAsync(tokenRequestDto);
     }
 
