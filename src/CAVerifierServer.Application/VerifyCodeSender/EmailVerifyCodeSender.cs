@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using CAVerifierServer.Account;
 using CAVerifierServer.Email;
 using CAVerifierServer.Options;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NUglify.Helpers;
 using Volo.Abp.Emailing;
@@ -16,13 +17,16 @@ public class EmailVerifyCodeSender : IVerifyCodeSender
     private readonly IEmailSender _emailSender;
     private readonly AwsEmailOptions _awsEmailOptions;
     private readonly VerifierInfoOptions _verifierInfoOptions;
+    private readonly ILogger<EmailVerifyCodeSender> _logger;
 
-    public EmailVerifyCodeSender (IEmailSender emailSender, IOptions<AwsEmailOptions> awsEmailOptions, IOptionsSnapshot<VerifierInfoOptions> verifierinfoOptions)
+    public EmailVerifyCodeSender (IEmailSender emailSender, IOptions<AwsEmailOptions> awsEmailOptions, IOptionsSnapshot<VerifierInfoOptions> verifierinfoOptions,
+        ILogger<EmailVerifyCodeSender> logger)
     {
         _emailSender = emailSender;
         _verifierInfoOptions = verifierinfoOptions.Value;
         _awsEmailOptions = awsEmailOptions.Value;
         _regex = new Regex(CAVerifierServerApplicationConsts.EmailRegex);
+        _logger = logger;
     }
 
     public async Task SendTransactionInfoNotificationAsync(string email, EmailTemplate template, string showOperationDetails)
@@ -66,6 +70,10 @@ public class EmailVerifyCodeSender : IVerifyCodeSender
 
     public bool ValidateGuardianIdentifier(string guardianIdentifier)
     {
+        _logger.LogDebug("ValidateGuardianIdentifier guardianIdentifier:{0}", guardianIdentifier);
+        _logger.LogDebug("ValidateGuardianIdentifier guardianIdentifier IsNullOrWhiteSpace:{0}", !string.IsNullOrWhiteSpace(guardianIdentifier));
+        _logger.LogDebug("ValidateGuardianIdentifier _regex:{0}", _regex.ToString());
+        _logger.LogDebug("ValidateGuardianIdentifier _regex.IsMatch:{0}", _regex.IsMatch(guardianIdentifier));
         return !string.IsNullOrWhiteSpace(guardianIdentifier) && _regex.IsMatch(guardianIdentifier);    
     }
     

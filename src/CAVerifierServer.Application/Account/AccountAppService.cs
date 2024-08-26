@@ -135,11 +135,11 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
         _logger.LogDebug("SendNotificationRequestAsync email:{0} emailSender.Type:{1}", request.Email, emailSender.Type);
         if (emailSender.ValidateGuardianIdentifier(request.Email))
         {
-            return new ResponseResultDto<bool>
-            {
-                Success = false,
-                Message = Error.Message[Error.InvalidGuardianIdentifierInput]
-            };
+            // return new ResponseResultDto<bool>
+            // {
+            //     Success = false,
+            //     Message = Error.Message[Error.InvalidGuardianIdentifierInput]
+            // };
         }
 
         try
