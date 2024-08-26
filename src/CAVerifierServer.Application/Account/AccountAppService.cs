@@ -133,17 +133,20 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
             };
         }
         _logger.LogDebug("SendNotificationRequestAsync email:{0} emailSender.Type:{1}", request.Email, emailSender.Type);
-        if (emailSender.ValidateGuardianIdentifier(request.Email))
-        {
-            // return new ResponseResultDto<bool>
-            // {
-            //     Success = false,
-            //     Message = Error.Message[Error.InvalidGuardianIdentifierInput]
-            // };
-        }
+        var validateResult = emailSender.ValidateGuardianIdentifier(request.Email);
+        _logger.LogDebug("SendNotificationRequestAsync validateResult:{0}", validateResult);
+        // if (emailSender.ValidateGuardianIdentifier(request.Email))
+        // {
+        //     return new ResponseResultDto<bool>
+        //     {
+        //         Success = false,
+        //         Message = Error.Message[Error.InvalidGuardianIdentifierInput]
+        //     };
+        // }
 
         try
         {
+            _logger.LogDebug("SendTransactionInfoNotificationAsync request:{0}", JsonConvert.SerializeObject(request));
             await emailSender.SendTransactionInfoNotificationAsync(request.Email, request.Template, request.ShowOperationDetails);
             return new ResponseResultDto<bool>
             {

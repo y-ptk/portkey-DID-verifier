@@ -364,7 +364,7 @@ public class ThirdPartyVerificationGrain : Grain<ThirdPartyVerificationState>, I
     {
         try
         {
-            //从tg auth请求获取公钥
+            //get public key from telegram auth
             var jwkDto = await GetTelegramJwkFormTelegramAuthAsync();
             var jwk = new JsonWebKey(JsonConvert.SerializeObject(jwkDto));
             var validateParameter = new TokenValidationParameters
