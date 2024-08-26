@@ -228,10 +228,65 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
         }
     }
 
-    public Task<SendVerificationRequestDto> SendVerificationToSecondaryEmail(SecondaryEmailVerificationInput input)
+    public async Task<ResponseResultDto<SendVerificationRequestDto>> SendVerificationToSecondaryEmail(SecondaryEmailVerificationInput input)
     {
-        //todo secondary email verification content
-        return null;
+        var verifyCodeSender = _verifyCodeSenders.FirstOrDefault(v => VerifierSenderType.Email.ToString().Equals(v.Type));
+        if (verifyCodeSender == null)
+        {
+            return new ResponseResultDto<SendVerificationRequestDto>
+            {
+                Success = false,
+                Message = Error.Message[Error.Unsupported]
+            };
+        }
+
+        if (!verifyCodeSender.ValidateGuardianIdentifier(input.SecondaryEmail))
+        {
+            return new ResponseResultDto<SendVerificationRequestDto>
+            {
+                Success = false,
+                Message = Error.Message[Error.InvalidGuardianIdentifierInput]
+            };
+        }
+
+        try
+        {
+            var grain = _clusterClient.GetGrain<IGuardianIdentifierVerificationGrain>(input.SecondaryEmail);
+            var dto = await grain.GetVerifyCodeAsync(new SendVerificationRequestInput()
+            {
+                Type = VerifierSenderType.Email.ToString(),
+                GuardianIdentifier = input.SecondaryEmail,
+                VerifierSessionId = input.VerifierSessionId,
+                OperationDetails = string.Empty
+            });
+            if (!dto.Success)
+            {
+                return new ResponseResultDto<SendVerificationRequestDto>
+                {
+                    Success = false,
+                    Message = dto.Message
+                };
+            }
+
+            await verifyCodeSender.SendCodeByGuardianIdentifierAsync(input.SecondaryEmail, dto.Data.VerifierCode);
+            return new ResponseResultDto<SendVerificationRequestDto>
+            {
+                Success = true,
+                Data = new SendVerificationRequestDto
+                {
+                    VerifierSessionId = input.VerifierSessionId
+                }
+            };
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, Error.SendVerificationRequestErrorLogPrefix + e.Message);
+            return new ResponseResultDto<SendVerificationRequestDto>
+            {
+                Success = false,
+                Message = Error.SendVerificationRequestErrorLogPrefix + e.Message
+            };
+        }
     }
 
     public async Task<string> WhiteListCheckAsync(List<string> ipList)

@@ -42,7 +42,7 @@ public class CAVerificationController : CAVerifierServerController
     }
     
     [HttpPost("/send/secondary/email/verify")]
-    public async Task<SendVerificationRequestDto> SendVerificationToSecondaryEmail(SecondaryEmailVerificationInput input)
+    public async Task<ResponseResultDto<SendVerificationRequestDto>> SendVerificationToSecondaryEmail(SecondaryEmailVerificationInput input)
     {
         return await _accountAppService.SendVerificationToSecondaryEmail(input);
     }

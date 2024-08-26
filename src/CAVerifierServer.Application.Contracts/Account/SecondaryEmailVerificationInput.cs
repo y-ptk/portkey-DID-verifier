@@ -1,8 +1,10 @@
+using System;
+
 namespace CAVerifierServer.Account;
 
 public class SecondaryEmailVerificationInput
 {
     public string SecondaryEmail { get; set; }
     
-    public string VerifierSessionId { get; set; }
+    public Guid VerifierSessionId { get; set; }
 }
