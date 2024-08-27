@@ -14,4 +14,6 @@ public class VerifyTokenRequestDto
     public string OperationDetails { get; set; }
     //the email used for receiving the transaction information before approval
     public string SecondaryEmail { get; set; }
+    
+    public string ShowOperationDetails { get; set; }
 }

@@ -133,16 +133,15 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
             };
         }
         _logger.LogDebug("SendNotificationRequestAsync email:{0} emailSender.Type:{1}", request.Email, emailSender.Type);
-        var validateResult = emailSender.ValidateGuardianIdentifier(request.Email);
-        _logger.LogDebug("SendNotificationRequestAsync validateResult:{0}", validateResult);
-        // if (emailSender.ValidateGuardianIdentifier(request.Email))
-        // {
-        //     return new ResponseResultDto<bool>
-        //     {
-        //         Success = false,
-        //         Message = Error.Message[Error.InvalidGuardianIdentifierInput]
-        //     };
-        // }
+        if (emailSender.ValidateGuardianIdentifier(request.Email))
+        {
+            _logger.LogDebug("SendNotificationRequestAsync validateResult:{0}", false);
+            return new ResponseResultDto<bool>
+            {
+                Success = false,
+                Message = Error.Message[Error.InvalidGuardianIdentifierInput]
+            };
+        }
 
         try
         {
@@ -331,7 +330,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
             var email = GetEmail(tokenRequestDto.SecondaryEmail, resultDto.Data.GoogleUserExtraInfo.Email);
             _logger.LogDebug("VerifyGoogleTokenAsync secondaryEmal:{0} email:{1} result:{2}",
                 tokenRequestDto.SecondaryEmail, resultDto.Data.GoogleUserExtraInfo.Email, email);
-            var sentResultDto = await SendTransactionInformationBeforeApprovalAsync(email, tokenRequestDto.OperationDetails);
+            var sentResultDto = await SendTransactionInformationBeforeApprovalAsync(email, tokenRequestDto.ShowOperationDetails);
             if (sentResultDto is not { Success: true })
             {
                 _logger.LogDebug("VerifyGoogleTokenAsync secondaryEmail failed email:{0} message:{1}",
