@@ -1,3 +1,4 @@
+using System;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CAVerifierServer.Account;
@@ -70,11 +71,17 @@ public class EmailVerifyCodeSender : IVerifyCodeSender
 
     public bool ValidateGuardianIdentifier(string guardianIdentifier)
     {
-        _logger.LogDebug("ValidateGuardianIdentifier guardianIdentifier:{0}", guardianIdentifier);
-        _logger.LogDebug("ValidateGuardianIdentifier guardianIdentifier IsNullOrWhiteSpace:{0}", !string.IsNullOrWhiteSpace(guardianIdentifier));
-        _logger.LogDebug("ValidateGuardianIdentifier _regex:{0}", _regex.ToString());
-        _logger.LogDebug("ValidateGuardianIdentifier _regex.IsMatch:{0}", _regex.IsMatch(guardianIdentifier));
-        return !string.IsNullOrWhiteSpace(guardianIdentifier) && _regex.IsMatch(guardianIdentifier);    
+        var result = !string.IsNullOrWhiteSpace(guardianIdentifier) && _regex.IsMatch(guardianIdentifier);
+        try
+        {
+            _logger.LogDebug("ValidateGuardianIdentifier guardianIdentifier:{0} !string.IsNullOrWhiteSpace:{1} _regex.IsMatch:{2} validationResult:{3}",
+                guardianIdentifier, !string.IsNullOrWhiteSpace(guardianIdentifier), _regex.IsMatch(guardianIdentifier), result);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "ValidateGuardianIdentifier Error");
+        }
+        return result;
     }
     
     private async Task SendEmailAsync(SendEmailInput input)
