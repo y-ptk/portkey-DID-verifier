@@ -41,11 +41,14 @@ public class CAVerificationController : CAVerifierServerController
         return await _accountAppService.VerifyCodeAsync(input);
     }
     
-    [HttpPost("/send/secondary/email/verify")]
+    [HttpPost]
+    [Route("send/secondary/email/verify")]
     public async Task<ResponseResultDto<SendVerificationRequestDto>> SendVerificationToSecondaryEmail(SecondaryEmailVerificationInput input)
     {
-        _logger.LogDebug("==============SecondaryEmailVerificationInput:{0}", JsonConvert.SerializeObject(input));
-        return await _accountAppService.SendVerificationToSecondaryEmail(input);
+        _logger.LogDebug("==============SendVerificationToSecondaryEmail input:{0}", JsonConvert.SerializeObject(input));
+        var result = await _accountAppService.SendVerificationToSecondaryEmail(input);
+        _logger.LogDebug("==============SendVerificationToSecondaryEmail result:{0}", JsonConvert.SerializeObject(result));
+        return result;
     }
     
     [HttpPost]
