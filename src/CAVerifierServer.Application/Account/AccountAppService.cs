@@ -133,15 +133,17 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
             };
         }
         _logger.LogDebug("SendNotificationRequestAsync email:{0} emailSender.Type:{1}", request.Email, emailSender.Type);
-        if (emailSender.ValidateGuardianIdentifier(request.Email))
-        {
-            _logger.LogDebug("SendNotificationRequestAsync validateResult:{0}", false);
-            return new ResponseResultDto<bool>
-            {
-                Success = false,
-                Message = Error.Message[Error.InvalidGuardianIdentifierInput]
-            };
-        }
+        var validateResult = emailSender.ValidateGuardianIdentifier(request.Email);
+        _logger.LogDebug("SendNotificationRequestAsync email:{0} emailSender.Type:{1} result:{2}", request.Email, emailSender.Type, validateResult);
+        // if (emailSender.ValidateGuardianIdentifier(request.Email))
+        // {
+        //     _logger.LogDebug("SendNotificationRequestAsync validateResult:{0}", false);
+        //     return new ResponseResultDto<bool>
+        //     {
+        //         Success = false,
+        //         Message = Error.Message[Error.InvalidGuardianIdentifierInput]
+        //     };
+        // }
 
         try
         {
@@ -241,9 +243,10 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
                 Message = Error.Message[Error.Unsupported]
             };
         }
-
+        _logger.LogDebug("SendVerificationToSecondaryEmail verifyCodeSender:{0}", verifyCodeSender.Type);
         if (!verifyCodeSender.ValidateGuardianIdentifier(input.SecondaryEmail))
         {
+            _logger.LogDebug("SendVerificationToSecondaryEmail ValidateGuardianIdentifier failed email:{0}", input.SecondaryEmail);
             return new ResponseResultDto<SendVerificationRequestDto>
             {
                 Success = false,
@@ -261,6 +264,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
                 VerifierSessionId = input.VerifierSessionId,
                 OperationDetails = string.Empty
             });
+            _logger.LogDebug("SendVerificationToSecondaryEmail GetVerifyCodeAsync dto:{0}", JsonConvert.SerializeObject(dto));
             if (!dto.Success)
             {
                 return new ResponseResultDto<SendVerificationRequestDto>
