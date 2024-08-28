@@ -232,6 +232,49 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
         }
     }
 
+    public async Task<ResponseResultDto<bool>> VerifySecondaryEmailCodeAsync(SecondaryEmailVerifyCodeInput input)
+    {
+        if (input.VerifierSessionId == Guid.Empty
+            || input.Code.IsNullOrEmpty() ||
+            input.SecondaryEmail.IsNullOrEmpty())
+        {
+            return new ResponseResultDto<bool>
+            {
+                Success = false,
+                Message = Error.Message[Error.NullOrEmptyInput]
+            };
+        }
+
+        try
+        {
+            var grain = _clusterClient.GetGrain<IGuardianIdentifierVerificationGrain>(input.SecondaryEmail);
+            var resultDto = await grain.VerifySecondaryEmailCodeAsync(input);
+            if (resultDto.Success)
+            {
+                return new ResponseResultDto<bool>
+                {
+                    Success = true,
+                    Data = true
+                };
+            }
+
+            return new ResponseResultDto<bool>
+            {
+                Success = false,
+                Message = resultDto.Message
+            };
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, Error.VerifyCodeErrorLogPrefix + e.Message);
+            return new ResponseResultDto<bool>
+            {
+                Success = false,
+                Message = Error.VerifyCodeErrorLogPrefix + e.Message
+            };
+        }
+    }
+
     public async Task<ResponseResultDto<SendVerificationRequestDto>> SendVerificationToSecondaryEmail(SecondaryEmailVerificationInput input)
     {
         var verifyCodeSender = _verifyCodeSenders.FirstOrDefault(v => VerifierSenderType.Email.ToString().Equals(v.Type));
