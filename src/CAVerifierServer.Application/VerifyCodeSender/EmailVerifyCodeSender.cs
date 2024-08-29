@@ -68,6 +68,19 @@ public class EmailVerifyCodeSender : IVerifyCodeSender
             });
         
     }
+    
+    public async Task SendCodeToSecondaryEmailAsync(string guardianIdentifier, string code)
+    {
+        await SendEmailAsync(new SendEmailInput
+        {
+            From = _awsEmailOptions.From,
+            To = guardianIdentifier,
+            Body = 
+                EmailBodyBuilder.BuildBodyTemplateForSecondaryEmail(_verifierInfoOptions.Name, _awsEmailOptions.Image, CAVerifierServerApplicationConsts.PORTKEY, code),
+            Subject = CAVerifierServerApplicationConsts.SecondaryVerifyCodeSubject
+        });
+        
+    }
 
     public bool ValidateGuardianIdentifier(string guardianIdentifier)
     {

@@ -317,7 +317,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
                 };
             }
 
-            await verifyCodeSender.SendCodeByGuardianIdentifierAsync(input.SecondaryEmail, dto.Data.VerifierCode);
+            await verifyCodeSender.SendCodeToSecondaryEmailAsync(input.SecondaryEmail, dto.Data.VerifierCode);
             return new ResponseResultDto<SendVerificationRequestDto>
             {
                 Success = true,

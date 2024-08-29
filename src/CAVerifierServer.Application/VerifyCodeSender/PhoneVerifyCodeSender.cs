@@ -94,6 +94,11 @@ public class PhoneVerifyCodeSender : IVerifyCodeSender
         }
     }
 
+    public Task SendCodeToSecondaryEmailAsync(string guardianIdentifier, string code)
+    {
+        throw new NotImplementedException();
+    }
+
 
     public bool ValidateGuardianIdentifier(string guardianIdentifier)
     {
