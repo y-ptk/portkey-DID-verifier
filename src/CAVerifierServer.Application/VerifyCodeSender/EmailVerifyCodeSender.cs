@@ -39,8 +39,8 @@ public class EmailVerifyCodeSender : IVerifyCodeSender
                 From = _awsEmailOptions.From,
                 To = email,
                 Body = 
-                    EmailBodyBuilder.BuildTransactionTemplate(_verifierInfoOptions.Name, _awsEmailOptions.Image, CAVerifierServerApplicationConsts.PORTKEY,  showOperationDetails),
-                Subject = CAVerifierServerApplicationConsts.Subject
+                    EmailBodyBuilder.BuildTransactionTemplateBeforeApproval(_verifierInfoOptions.Name, _awsEmailOptions.Image, CAVerifierServerApplicationConsts.PORTKEY,  showOperationDetails),
+                Subject = CAVerifierServerApplicationConsts.TransactionBeforeApprovalSubject
             });
         }
         else if (EmailTemplate.AfterApproval.Equals(template))
@@ -50,8 +50,8 @@ public class EmailVerifyCodeSender : IVerifyCodeSender
                 From = _awsEmailOptions.From,
                 To = email,
                 Body = 
-                    EmailBodyBuilder.BuildTransactionTemplate(_verifierInfoOptions.Name, _awsEmailOptions.Image, CAVerifierServerApplicationConsts.PORTKEY,  showOperationDetails),
-                Subject = CAVerifierServerApplicationConsts.Subject
+                    EmailBodyBuilder.BuildTransactionTemplateAfterApproval(_verifierInfoOptions.Name, _awsEmailOptions.Image, CAVerifierServerApplicationConsts.PORTKEY,  showOperationDetails),
+                Subject = CAVerifierServerApplicationConsts.TransactionAfterApprovalSubject
             });
         }
     }

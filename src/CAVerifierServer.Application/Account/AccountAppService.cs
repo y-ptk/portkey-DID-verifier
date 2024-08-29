@@ -123,7 +123,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
 
     public async Task<ResponseResultDto<bool>> SendNotificationRequestAsync(SendNotificationRequest request)
     {
-        var emailSender = _verifyCodeSenders.FirstOrDefault(v => "Email".Equals(v.Type));
+        var emailSender = _verifyCodeSenders.FirstOrDefault(v => VerifierSenderType.Email.ToString().Equals(v.Type));
         if (emailSender == null)
         {
             return new ResponseResultDto<bool>
