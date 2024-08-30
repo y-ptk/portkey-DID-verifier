@@ -63,6 +63,8 @@ public class CAVerificationController : CAVerifierServerController
     public async Task<ResponseResultDto<bool>> SendNotificationRequestAsync(
         SendNotificationRequest request)
     {
+        _logger.LogDebug("sendNotification request:{0}:", JsonConvert.SerializeObject(request));
+        request.Template = EmailTemplate.AfterApproval;
         return await _accountAppService.SendNotificationRequestAsync(request);
     }
 
