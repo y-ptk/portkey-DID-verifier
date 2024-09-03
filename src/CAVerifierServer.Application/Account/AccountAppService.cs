@@ -424,9 +424,14 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
                     Message = resultDto.Message
                 };
             }
-            var email = tokenRequestDto.SecondaryEmail.IsNullOrEmpty() ? resultDto.Data.AppleUserExtraInfo.Email : tokenRequestDto.SecondaryEmail;
-            await SendTransactionInformationBeforeApprovalAsync(email, tokenRequestDto.ShowOperationDetails);
-            
+
+            var email = resultDto.Data.AppleUserExtraInfo.IsPrivateEmail ? tokenRequestDto.SecondaryEmail : GetEmail(tokenRequestDto.SecondaryEmail, resultDto.Data.AppleUserExtraInfo.Email);
+            var response = await SendTransactionInformationBeforeApprovalAsync(email, tokenRequestDto.ShowOperationDetails);
+            if (response is { Success: false })
+            {
+                _logger.LogDebug("sent transaction email failed secondary email:{0} email:{1} showOperationDetails:{2}",
+                    tokenRequestDto.SecondaryEmail, resultDto.Data.AppleUserExtraInfo.Email, tokenRequestDto.ShowOperationDetails);
+            }
             return new ResponseResultDto<VerifyAppleTokenDto>
             {
                 Success = true,
