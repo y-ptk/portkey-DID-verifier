@@ -135,15 +135,15 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
         _logger.LogDebug("SendNotificationRequestAsync email:{0} emailSender.Type:{1}", request.Email, emailSender.Type);
         var validateResult = emailSender.ValidateGuardianIdentifier(request.Email);
         _logger.LogDebug("SendNotificationRequestAsync email:{0} emailSender.Type:{1} result:{2}", request.Email, emailSender.Type, validateResult);
-        // if (emailSender.ValidateGuardianIdentifier(request.Email))
-        // {
-        //     _logger.LogDebug("SendNotificationRequestAsync validateResult:{0}", false);
-        //     return new ResponseResultDto<bool>
-        //     {
-        //         Success = false,
-        //         Message = Error.Message[Error.InvalidGuardianIdentifierInput]
-        //     };
-        // }
+        if (emailSender.ValidateGuardianIdentifier(request.Email))
+        {
+            _logger.LogDebug("SendNotificationRequestAsync validateResult:{0}", false);
+            return new ResponseResultDto<bool>
+            {
+                Success = false,
+                Message = Error.Message[Error.InvalidGuardianIdentifierInput]
+            };
+        }
 
         try
         {
@@ -424,7 +424,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
                     Message = resultDto.Message
                 };
             }
-            var email = GetEmail(tokenRequestDto.SecondaryEmail, resultDto.Data.AppleUserExtraInfo.Email);
+            var email = tokenRequestDto.SecondaryEmail.IsNullOrEmpty() ? resultDto.Data.AppleUserExtraInfo.Email : tokenRequestDto.SecondaryEmail;
             await SendTransactionInformationBeforeApprovalAsync(email, tokenRequestDto.ShowOperationDetails);
             
             return new ResponseResultDto<VerifyAppleTokenDto>
