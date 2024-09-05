@@ -463,8 +463,7 @@ public class EmailBodyBuilder
         ""
       >
         <div style=""margin: 16px 0"">
-          In order to verify this email, please enter the 6-digit verification
-          code:
+          Use this code to complete the verification process:
         </div>
         <div
           style=""
