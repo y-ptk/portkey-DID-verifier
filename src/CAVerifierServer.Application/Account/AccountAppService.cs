@@ -132,10 +132,8 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
                 Message = "found no emailSender"
             };
         }
-        _logger.LogDebug("SendNotificationRequestAsync email:{0} emailSender.Type:{1}", request.Email, emailSender.Type);
         if (!emailSender.ValidateGuardianIdentifier(request.Email))
         {
-            _logger.LogDebug("SendNotificationRequestAsync validateResult:{0}", false);
             return new ResponseResultDto<bool>
             {
                 Success = false,
@@ -145,7 +143,6 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
 
         try
         {
-            _logger.LogDebug("SendTransactionInfoNotificationAsync request:{0}", JsonConvert.SerializeObject(request));
             await emailSender.SendTransactionInfoNotificationAsync(request.Email, request.Template, request.ShowOperationDetails);
             return new ResponseResultDto<bool>
             {
@@ -172,12 +169,25 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
                 Message = "Email is invalid"
             };
         }
-        return await SendNotificationRequestAsync(new SendNotificationRequest()
+
+        try
         {
-            Email = email,
-            Template = EmailTemplate.BeforeApproval,
-            ShowOperationDetails = showOperationDetails
-        });
+            return await SendNotificationRequestAsync(new SendNotificationRequest()
+            {
+                Email = email,
+                Template = EmailTemplate.BeforeApproval,
+                ShowOperationDetails = showOperationDetails
+            });
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "SendNotificationRequestAsync Error");
+            return new ResponseResultDto<bool>()
+            {
+                Success = false,
+                Message = e.Message
+            };
+        }
     }
 
     public async Task<ResponseResultDto<VerifierCodeDto>> VerifyCodeAsync(VerifyCodeInput input)
@@ -284,7 +294,6 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
                 Message = Error.Message[Error.Unsupported]
             };
         }
-        _logger.LogDebug("SendVerificationToSecondaryEmail verifyCodeSender:{0}", verifyCodeSender.Type);
         if (!verifyCodeSender.ValidateGuardianIdentifier(input.SecondaryEmail))
         {
             _logger.LogDebug("SendVerificationToSecondaryEmail ValidateGuardianIdentifier failed email:{0}", input.SecondaryEmail);
@@ -305,7 +314,6 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
                 VerifierSessionId = input.VerifierSessionId,
                 OperationDetails = string.Empty
             });
-            _logger.LogDebug("SendVerificationToSecondaryEmail GetVerifyCodeAsync dto:{0}", JsonConvert.SerializeObject(dto));
             if (!dto.Success)
             {
                 return new ResponseResultDto<SendVerificationRequestDto>
@@ -347,9 +355,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
         var servers = didServerList.DidServers.Distinct().ToList();
         var endPoints = new List<string>();
         servers.ForEach(t => { endPoints.Add(t.EndPoint); });
-        _logger.LogDebug("CaServerIPList id {ipList} :", string.Join(",", endPoints));
         var caIpList = endPoints.Select(ip => ip.Split("//")[1]).Select(formatter => formatter.Split(":")[0]).ToList();
-        _logger.LogDebug("Formatter ipList is {caIpList}", string.Join(",", caIpList));
         var result = ipList.Intersect(caIpList).ToList();
         return result.Count == 0 ? null : result[0];
     }
@@ -376,12 +382,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
             var sentResultDto = await SendTransactionInformationBeforeApprovalAsync(email, tokenRequestDto.ShowOperationDetails);
             if (sentResultDto is not { Success: true })
             {
-                _logger.LogDebug("VerifyGoogleTokenAsync secondaryEmail failed email:{0} message:{1}",
-                    email, sentResultDto?.Message);
-            }
-            else
-            {
-                _logger.LogDebug("VerifyGoogleTokenAsync secondaryEmail succeed email:{0}", email);
+                _logger.LogWarning("VerifyGoogleTokenAsync secondaryEmail failed email:{0} message:{1}", email, sentResultDto?.Message);
             }
             return new ResponseResultDto<VerifyGoogleTokenDto>
             {
@@ -427,7 +428,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
             var response = await SendTransactionInformationBeforeApprovalAsync(email, tokenRequestDto.ShowOperationDetails);
             if (response is { Success: false })
             {
-                _logger.LogDebug("sent transaction email failed secondary email:{0} email:{1} showOperationDetails:{2}",
+                _logger.LogWarning("sent transaction email failed secondary email:{0} email:{1} showOperationDetails:{2}",
                     tokenRequestDto.SecondaryEmail, resultDto.Data.AppleUserExtraInfo.Email, tokenRequestDto.ShowOperationDetails);
             }
             return new ResponseResultDto<VerifyAppleTokenDto>

@@ -4,7 +4,6 @@ using CAVerifierServer.Account;
 using CAVerifierServer.Account.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Volo.Abp;
 
 namespace CAVerifierServer.Controllers;
@@ -52,9 +51,7 @@ public class CAVerificationController : CAVerifierServerController
     [Route("send/secondary/email/verify")]
     public async Task<ResponseResultDto<SendVerificationRequestDto>> SendVerificationToSecondaryEmail(SecondaryEmailVerificationInput input)
     {
-        _logger.LogDebug("==============SendVerificationToSecondaryEmail input:{0}", JsonConvert.SerializeObject(input));
         var result = await _accountAppService.SendVerificationToSecondaryEmail(input);
-        _logger.LogDebug("==============SendVerificationToSecondaryEmail result:{0}", JsonConvert.SerializeObject(result));
         return result;
     }
     
@@ -63,7 +60,6 @@ public class CAVerificationController : CAVerifierServerController
     public async Task<ResponseResultDto<bool>> SendNotificationRequestAsync(
         SendNotificationRequest request)
     {
-        _logger.LogDebug("sendNotification request:{0}:", JsonConvert.SerializeObject(request));
         request.Template = EmailTemplate.AfterApproval;
         return await _accountAppService.SendNotificationRequestAsync(request);
     }
@@ -72,7 +68,6 @@ public class CAVerificationController : CAVerifierServerController
     public async Task<ResponseResultDto<VerifyGoogleTokenDto>> VerifyGoogleTokenAsync(
         VerifyTokenRequestDto tokenRequestDto)
     {
-        _logger.LogDebug("verifyGoogleToken received request:{0}", JsonConvert.SerializeObject(tokenRequestDto));
         return await _accountAppService.VerifyGoogleTokenAsync(tokenRequestDto);
     }
 
