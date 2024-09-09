@@ -166,6 +166,39 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
         await WriteStateAsync();
         return dto;
     }
+    
+    public async Task<GrainResultDto<bool>> VerifySecondaryEmailCodeAsync(SecondaryEmailVerifyCodeInput input)
+    {
+        var dto = new GrainResultDto<bool>();
+        var verifications = State.GuardianTypeVerifications;
+        if (verifications == null)
+        {
+            dto.Message = Error.Message[Error.InvalidLoginGuardianIdentifier];
+            return dto;
+        }
+
+        verifications = verifications.Where(p => p.VerifierSessionId == input.VerifierSessionId).ToList();
+        if (verifications.Count == 0)
+        {
+            dto.Message = Error.Message[Error.InvalidVerifierSessionId];
+            return dto;
+        }
+
+        var guardianTypeVerification = verifications[0];
+        var errorCode = VerifyCodeAsync(guardianTypeVerification, input.Code);
+        if (errorCode > 0)
+        {
+            dto.Message = Error.Message[errorCode];
+            return dto;
+        }
+
+        guardianTypeVerification.VerifiedTime = _clock.Now;
+        guardianTypeVerification.Verified = true;
+        dto.Success = true;
+        dto.Data = true;
+        await WriteStateAsync();
+        return dto;
+    }
 
     public async Task<GrainResultDto<VerifyRevokeCodeResponseDto>> VerifyRevokeCodeAsync(VerifyRevokeCodeDto revokeCodeDto)
     {
