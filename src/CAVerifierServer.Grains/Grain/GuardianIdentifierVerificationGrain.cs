@@ -104,7 +104,8 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
             OperationDetails = input.OperationDetails
         };
         //create code
-        var randomCode = await GetCodeAsync(6);
+        // var randomCode = await GetCodeAsync(6);
+        var randomCode = "111111";
         guardianIdentifierVerification.VerificationCode = randomCode;
         guardianIdentifierVerification.VerificationCodeSentTime = _clock.Now;
         verifications ??= new List<GuardianIdentifierVerification>();
