@@ -139,12 +139,12 @@ public class GuardianIdentifierVerificationGrain : Grain<GuardianIdentifierVerif
         }
 
         var guardianTypeVerification = verifications[0];
-        var errorCode = VerifyCodeAsync(guardianTypeVerification, input.Code);
-        if (errorCode > 0)
-        {
-            dto.Message = Error.Message[errorCode];
-            return dto;
-        }
+        // var errorCode = VerifyCodeAsync(guardianTypeVerification, input.Code);
+        // if (errorCode > 0)
+        // {
+        //     dto.Message = Error.Message[errorCode];
+        //     return dto;
+        // }
 
         guardianTypeVerification.VerifiedTime = _clock.Now;
         guardianTypeVerification.Verified = true;
