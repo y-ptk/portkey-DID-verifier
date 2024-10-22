@@ -159,20 +159,17 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
         }
     }
 
-    private async Task<ResponseResultDto<bool>> SendTransactionInformationBeforeApprovalAsync(string email, string showOperationDetails)
+    private async void SendTransactionInformationBeforeApprovalAsync(string email, string showOperationDetails)
     {
         if (email.IsNullOrEmpty())
         {
-            return new ResponseResultDto<bool>()
-            {
-                Success = false,
-                Message = "Email is invalid"
-            };
+            _logger.LogInformation("{0} Email is invalid", email);
+            return;
         }
 
         try
         {
-            return await SendNotificationRequestAsync(new SendNotificationRequest()
+            await SendNotificationRequestAsync(new SendNotificationRequest()
             {
                 Email = email,
                 Template = EmailTemplate.BeforeApproval,
@@ -182,11 +179,6 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
         catch (Exception e)
         {
             _logger.LogError(e, "SendNotificationRequestAsync Error");
-            return new ResponseResultDto<bool>()
-            {
-                Success = false,
-                Message = e.Message
-            };
         }
     }
 
@@ -379,11 +371,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
                 };
             }
             var email = GetEmail(tokenRequestDto.SecondaryEmail, resultDto.Data.GoogleUserExtraInfo.Email);
-            var sentResultDto = await SendTransactionInformationBeforeApprovalAsync(email, tokenRequestDto.ShowOperationDetails);
-            if (sentResultDto is not { Success: true })
-            {
-                _logger.LogWarning("VerifyGoogleTokenAsync secondaryEmail failed email:{0} message:{1}", email, sentResultDto?.Message);
-            }
+            SendTransactionInformationBeforeApprovalAsync(email, tokenRequestDto.ShowOperationDetails);
             return new ResponseResultDto<VerifyGoogleTokenDto>
             {
                 Success = true,
@@ -425,12 +413,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
             }
 
             var email = resultDto.Data.AppleUserExtraInfo.IsPrivateEmail ? tokenRequestDto.SecondaryEmail : GetEmail(tokenRequestDto.SecondaryEmail, resultDto.Data.AppleUserExtraInfo.Email);
-            var response = await SendTransactionInformationBeforeApprovalAsync(email, tokenRequestDto.ShowOperationDetails);
-            if (response is { Success: false })
-            {
-                _logger.LogWarning("sent transaction email failed secondary email:{0} email:{1} showOperationDetails:{2}",
-                    tokenRequestDto.SecondaryEmail, resultDto.Data.AppleUserExtraInfo.Email, tokenRequestDto.ShowOperationDetails);
-            }
+            SendTransactionInformationBeforeApprovalAsync(email, tokenRequestDto.ShowOperationDetails);
             return new ResponseResultDto<VerifyAppleTokenDto>
             {
                 Success = true,
@@ -465,7 +448,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
                     Message = resultDto.Message
                 };
             }
-            await SendTransactionInformationBeforeApprovalAsync(tokenRequestDto.SecondaryEmail, tokenRequestDto.ShowOperationDetails);
+            SendTransactionInformationBeforeApprovalAsync(tokenRequestDto.SecondaryEmail, tokenRequestDto.ShowOperationDetails);
             return new ResponseResultDto<VerifyTokenDto<TelegramUserExtraInfo>>
             {
                 Success = true,
@@ -500,7 +483,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
                     Message = resultDto.Message
                 };
             }
-            await SendTransactionInformationBeforeApprovalAsync(input.SecondaryEmail, input.ShowOperationDetails);
+            SendTransactionInformationBeforeApprovalAsync(input.SecondaryEmail, input.ShowOperationDetails);
             return new ResponseResultDto<VerifierCodeDto>
             {
                 Success = true,
@@ -611,7 +594,7 @@ public class AccountAppService : CAVerifierServerAppService, IAccountAppService
                     Message = resultDto.Message
                 };
             }
-            await SendTransactionInformationBeforeApprovalAsync(tokenRequestDto.SecondaryEmail, tokenRequestDto.ShowOperationDetails);
+            SendTransactionInformationBeforeApprovalAsync(tokenRequestDto.SecondaryEmail, tokenRequestDto.ShowOperationDetails);
             return new ResponseResultDto<VerifyTwitterTokenDto>
             {
                 Success = true,
